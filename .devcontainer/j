@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+if [ -n "${1:-}" ]; then
+  if [ "$1" = "${ZMX_SESSION:-}" ]; then
+    printf 'already in %s\n' "$1" >&2
+    exit 1
+  fi
+  zmx attach "$1" dvtm -m '^a'
+  exit
+fi
+if [ -z "${ZMX_SESSION:-}" ]; then
+  root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+  exec zmx attach "$(basename "$root")" dvtm -m '^a'
+fi
+sessions=$(zmx list --short 2>/dev/null | grep -vxF "$ZMX_SESSION" || true)
+if [ -z "$sessions" ]; then
+  printf 'no other zmx sessions\n' >&2
+  exit 1
+fi
+picked=$(printf '%s\n' "$sessions" | fzf --prompt 'zmx> ' --preview 'zmx history {} | tail -20')
+[ -n "$picked" ] || exit 130
+zmx attach "$picked"

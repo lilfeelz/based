@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")"
+if [ "$(launchctl managername 2>/dev/null)" != "Aqua" ]; then
+  printf 'container needs the GUI session. Run from Terminal.app, or:\n' >&2
+  printf '  sudo launchctl asuser %s sudo -u %s %s/%s\n' \
+    "$(id -u)" "$USER" "$PWD" "$(basename "$0")" >&2
+  exit 1
+fi
+name=zmx-based
+image=zmx-based:local
+
+case "${1:-}" in
+  stop)
+    container rm -f "$name" 2>/dev/null || true
+    exit 0
+    ;;
+esac
+
+container system start >/dev/null 2>&1 || true
+container build --tag "$image" --file .devcontainer/Dockerfile .
+
+if container inspect "$name" >/dev/null 2>&1; then
+  container start "$name" >/dev/null 2>&1 || true
+else
+  container run -d --name "$name" --user vscode \
+    --volume "$PWD:/workspaces/based" --workdir /workspaces/based \
+    "$image" sleep infinity
+fi
+
+exec container exec -it --user vscode \
+  --workdir /workspaces/based "$name" bash
