@@ -1,16 +1,24 @@
 #!/bin/sh
 set -eu
+attach() {
+  if command -v dvtm >/dev/null 2>&1; then
+    zmx attach "$1" dvtm -m '^a'
+  else
+    zmx attach "$1" nvim -c term -c startinsert
+  fi
+}
 if [ -n "${1:-}" ]; then
   if [ "$1" = "${ZMX_SESSION:-}" ]; then
     printf 'already in %s\n' "$1" >&2
     exit 1
   fi
-  zmx attach "$1" dvtm -m '^a'
+  attach "$1"
   exit
 fi
 if [ -z "${ZMX_SESSION:-}" ]; then
   root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-  exec zmx attach "$(basename "$root")" dvtm -m '^a'
+  attach "$(basename "$root")"
+  exit
 fi
 sessions=$(zmx list --short 2>/dev/null | grep -vxF "$ZMX_SESSION" || true)
 if [ -z "$sessions" ]; then

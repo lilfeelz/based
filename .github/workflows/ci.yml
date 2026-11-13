@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: shellcheck
+        run: |
+          shellcheck -x -P SCRIPTDIR -s sh \
+            install/common.sh \
+            install/macos.sh \
+            install/termux.sh \
+            install/container.sh \
+            .devcontainer/j \
+            run
+      - name: test install
+        run: |
+          tmp=$(mktemp -d)
+          env -u XDG_DATA_HOME HOME="$tmp/home" \
+            BASED_ROOT="$PWD" \
+            BASED_BIN="$tmp/home/.local/bin" \
+            BASED_DATA="$tmp/home/.local/share/nvim" \
+            BASED_NVIM_CONFIG="$tmp/home/.config/nvim" \
+            sh -c '. install/common.sh && install_zmx && install_fzf_lua && install_config'
+          test -x "$tmp/home/.local/bin/zmx"
+          test -x "$tmp/home/.local/bin/j"
+          test -f "$tmp/home/.config/nvim/init.lua"
+          test -d "$tmp/home/.local/share/nvim/fzf-lua"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: build devcontainer image
+        run: docker build -f .devcontainer/Dockerfile .

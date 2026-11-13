@@ -1,6 +1,6 @@
 vim.g.mapleader = ' '
 
-vim.opt.runtimepath:prepend('/opt/fzf-lua')
+vim.opt.runtimepath:prepend(vim.env.BASED_FZF_LUA or (vim.fn.stdpath('data') .. '/fzf-lua'))
 local fzf = require('fzf-lua')
 local map = vim.keymap.set
 
