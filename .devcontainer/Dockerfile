@@ -7,5 +7,5 @@ ENV DEBIAN_FRONTEND=noninteractive \
 COPY install /tmp/based/install
 COPY .devcontainer /tmp/based/.devcontainer
 
-RUN BASED_HOME=/home/vscode sh /tmp/based/install/devcontainer.sh \
+RUN BASED_HOME=/home/vscode sh /tmp/based/install/container.sh \
  && rm -rf /tmp/based

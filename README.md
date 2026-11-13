@@ -21,7 +21,7 @@ Apple `container` needs the GUI session. If `./run` says so, run it from Termina
 ./install/termux.sh   # Termux packages, zmx, fzf-lua, nvim config, j
 ```
 
-The devcontainer image runs `install/devcontainer.sh` from the Dockerfile.
+The devcontainer image runs `install/container.sh` from the Dockerfile.
 
 macOS has no dvtm package, so `j` runs `nvim -c term -c startinsert` there. Termux and the container image use dvtm. Add `~/.local/bin` to `PATH` on macOS if the installer asks.
 

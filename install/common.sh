@@ -5,7 +5,7 @@ set -eu
 : "${BASED_DATA:?BASED_DATA is required}"
 : "${BASED_NVIM_CONFIG:?BASED_NVIM_CONFIG is required}"
 
-BASED_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+BASED_ROOT="${BASED_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}"
 ZMX_VERSION=0.8.1
 FZF_LUA_COMMIT=ded1c96d3d9d74634287d722431c26690968a4bf
 ZMX_BASE="https://github.com/neurosnap/zmx/releases/download/v${ZMX_VERSION}"
