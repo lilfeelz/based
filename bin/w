@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
+
 for p in "$HOME" "$HOME/Notes" "$HOME/Notes"/* "$HOME/Notes"/*/* \
-         "$HOME/Workspaces" "$HOME/Workspaces"/* "$HOME/Workspaces"/*/*; do
+  "$HOME/Workspaces" "$HOME/Workspaces"/* "$HOME/Workspaces"/*/*; do
   [ -d "$p" ] || continue
   if [ "$p" = "$HOME" ]; then
     printf '~\n'

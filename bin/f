@@ -1,0 +1,2 @@
+#!/bin/sh
+exec fd --hidden --follow --exclude .git "$@"

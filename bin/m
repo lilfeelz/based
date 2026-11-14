@@ -2,15 +2,13 @@
 set -eu
 export ZMX_NO_DETACH_KEY=1
 
-backend() {
-  if [ -n "${BASED_MUX:-}" ]; then
-    printf '%s\n' "$BASED_MUX"
-  elif [ "$(uname -s)" = Darwin ]; then
-    printf 'rex\n'
-  else
-    printf 'zmx\n'
-  fi
-}
+if [ -n "${BASED_MUX:-}" ]; then
+  mux="$BASED_MUX"
+elif [ "$(uname -s)" = Darwin ]; then
+  mux=rex
+else
+  mux=zmx
+fi
 
 resolve_target() {
   t="$1"
@@ -28,44 +26,16 @@ resolve_target() {
   fi
 }
 
-attach_one() {
-  [ -n "$1" ] || return 0
-  resolve_target "$1"
-  case "$(backend)" in
-    rex)
-      if ! rex ls 2>/dev/null | awk 'NR>1 {print $2}' | grep -qxF "$name"; then
-        rex new "$name" -c "$dir" --window zsh -- /bin/zsh -l >/dev/null
-      fi
-      exec rex attach "$name"
-      ;;
-    *)
-      cd "$dir"
-      SHELL="${SHELL:-$(command -v zsh || command -v sh)}"
-      export SHELL
-      exec zmx attach "$name" dvtm -m '^a'
-      ;;
-  esac
-}
-
-delete_one() {
-  [ -n "$1" ] || return 0
-  resolve_target "$1"
-  case "$(backend)" in
-    rex) rex kill "$name" ;;
-    *) zmx kill "$name" ;;
-  esac
-}
-
 cmd="${1:-attach}"
 case "$cmd" in
   list)
-    case "$(backend)" in
+    case "$mux" in
       rex) rex ls 2>/dev/null | awk 'NR>1 {print $2}' || true ;;
       *) zmx list --short 2>/dev/null || true ;;
     esac
     ;;
   detach)
-    case "$(backend)" in
+    case "$mux" in
       rex) rex detach ;;
       *) zmx detach ;;
     esac
@@ -73,24 +43,46 @@ case "$cmd" in
   delete)
     shift
     if [ "$#" -gt 0 ]; then
-      for target in "$@"; do delete_one "$target"; done
+      printf '%s\n' "$@"
     else
-      while IFS= read -r target; do delete_one "$target"; done
-    fi
-    ;;
-  attach)
-    shift || true
-    if [ "$#" -gt 0 ]; then
-      attach_one "$1"
-    elif [ ! -t 0 ]; then
-      IFS= read -r target || exit 0
-      attach_one "$target"
-    else
-      root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-      attach_one "$root"
-    fi
+      cat
+    fi | while IFS= read -r target; do
+      [ -n "$target" ] || continue
+      resolve_target "$target"
+      case "$mux" in
+        rex) rex kill "$name" ;;
+        *) zmx kill "$name" ;;
+      esac
+    done
     ;;
   *)
-    attach_one "$cmd"
+    if [ "$cmd" = attach ]; then
+      shift || true
+      if [ "$#" -gt 0 ]; then
+        target="$1"
+      elif [ ! -t 0 ]; then
+        IFS= read -r target || exit 0
+      else
+        target=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+      fi
+    else
+      target="$cmd"
+    fi
+    [ -n "$target" ] || exit 0
+    resolve_target "$target"
+    case "$mux" in
+      rex)
+        if ! rex ls 2>/dev/null | awk 'NR>1 {print $2}' | grep -qxF "$name"; then
+          rex new "$name" -c "$dir" --window zsh -- /bin/zsh -l >/dev/null
+        fi
+        exec rex attach "$name"
+        ;;
+      *)
+        cd "$dir"
+        SHELL="${SHELL:-$(command -v zsh || command -v sh)}"
+        export SHELL
+        exec zmx attach "$name" dvtm -m '^a'
+        ;;
+    esac
     ;;
 esac

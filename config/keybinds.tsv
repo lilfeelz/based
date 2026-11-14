@@ -1,33 +1,33 @@
-zsh	f	fd --hidden --follow --exclude .git
-zsh	s	rg --hidden --smart-case --glob !.git
-zsh	l	ls -lahF
-zsh	g	git
-zsh	h	man
-zsh	d	ssh host list/connect
-zsh	w	workspace directory list
-zsh	m	session mux (list/attach/detach/delete)
-zsh	j	fuzzy jump workspace or session
-zsh	k	keybinds (list/edit/delete)
-zsh	e	nvim
-zsh	a	pi
+dvtm	Ctrl+A ?	dvtm help
+dvtm	Ctrl+A c	new shell pane
+dvtm	Ctrl+A j/k	next/prev pane
+dvtm	Ctrl+A x	close pane
+nvim	<Space>d	mux detach session
+nvim	<Space>fb	fzf buffers
 nvim	<Space>ff	fzf files
 nvim	<Space>fg	fzf live grep
-nvim	<Space>fw	fzf grep word
-nvim	<Space>fb	fzf buffers
 nvim	<Space>fr	fzf recent files
+nvim	<Space>fw	fzf grep word
 nvim	<Space>j	mux switch session
-nvim	<Space>d	mux detach session
-dvtm	Ctrl+A c	new shell pane
-dvtm	Ctrl+A x	close pane
-dvtm	Ctrl+A j/k	next/prev pane
-dvtm	Ctrl+A ?	dvtm help
-pi	Esc	vim normal mode
 pi	Ctrl+O	edit prompt in nvim
 pi	Ctrl+X	leader menu
-rex	Cmd+G	workspace picker
+pi	Esc	vim normal mode
 rex	Cmd+F	file picker
+rex	Cmd+G	workspace picker
 rex	Cmd+S	search picker
 rift	CAG+H/J/K/L/N	focus window left/down/up/right/next
-rift	Hyper+H/J/K/L/N	move window left/down/up/right or focus prev
 rift	CAG+I/O	prev/next workspace
 rift	CAG+Space	open Rex
+rift	Hyper+H/J/K/L/N	move window left/down/up/right or focus prev
+zsh	a	pi
+zsh	d	ssh host list/connect
+zsh	e	nvim
+zsh	f	fd --hidden --follow --exclude .git
+zsh	g	git
+zsh	h	man
+zsh	j	fuzzy jump workspace or session
+zsh	k	keybinds (list/edit/delete)
+zsh	l	ls -lahF
+zsh	m	session mux (list/attach/detach/delete)
+zsh	s	rg --hidden --smart-case --glob !.git
+zsh	w	workspace directory list

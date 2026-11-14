@@ -11,9 +11,6 @@ BASED_BIN=/usr/local/bin
 BASED_ZSHRC="$BASED_HOME/.zshrc"
 export BASED_HOME BASED_BIN BASED_ZSHRC
 
-# shellcheck source=install/common.sh
-. "$(dirname "$0")/common.sh"
-
 apt-get update
 apt-get install -y --no-install-recommends \
   bat build-essential ca-certificates curl fd-find fzf git jq libncurses-dev \
@@ -26,12 +23,7 @@ mkdir -p /usr/local/share/fzf
 curl -fsSL -o /usr/local/share/fzf/key-bindings.zsh \
   "https://raw.githubusercontent.com/junegunn/fzf/$(fzf --version | cut -d' ' -f1)/shell/key-bindings.zsh"
 
-install_zmx
-install_dvtm
-install_nvim
-install_pi
-install_fzf_lua
-install_config
+sh "$(dirname "$0")/common.sh" zmx dvtm nvim pi config
 
 chsh -s /bin/zsh vscode 2>/dev/null || true
 chown -R vscode:vscode "$BASED_HOME/.config" "$BASED_HOME/.local" "$BASED_HOME/.zshrc"

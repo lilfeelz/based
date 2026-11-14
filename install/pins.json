@@ -22,10 +22,6 @@
     "commit": "7bcf43f8dbd5c4a67ec573a1248114caa75fa3c2",
     "sha256": "5ad3bb68c7f064a2ff96a2e70637b8a974f7c69018cd546651bc7c0f1eaaf2ea"
   },
-  "fzf-lua": {
-    "commit": "ded1c96d3d9d74634287d722431c26690968a4bf",
-    "sha256": "631181d3d4ff9e1b45a4f3641b4d588650dde9b19fc2b9771421f88ed29a5812"
-  },
   "nvim": {
     "version": "0.12.6",
     "linux-x86_64": {
