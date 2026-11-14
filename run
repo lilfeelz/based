@@ -1,39 +1,44 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")"
-if [ "$(launchctl managername 2>/dev/null)" != "Aqua" ]; then
+engine="${BASED_CONTAINER:-container}"
+if [ "$engine" = container ] && [ "$(launchctl managername 2>/dev/null)" != "Aqua" ]; then
   printf 'container needs the GUI session. Run from Terminal.app, or:\n' >&2
   printf '  sudo launchctl asuser %s sudo -u %s %s/%s\n' \
     "$(id -u)" "$USER" "$PWD" "$(basename "$0")" >&2
   exit 1
+fi
+if [ "$engine" = container ]; then
+  container system start >/dev/null 2>&1 || true
 fi
 name=zmx-based
 image="${BASED_IMAGE:-ghcr.io/lilfeelz/based:latest}"
 
 case "${1:-}" in
   stop)
-    container rm -f "$name" 2>/dev/null || true
+    "$engine" rm -f "$name" 2>/dev/null || true
     exit 0
     ;;
   build)
-    image=zmx-based:local
-    container system start >/dev/null 2>&1 || true
-    container build --tag "$image" --file .devcontainer/Dockerfile .
+    exec "$engine" build --tag "$image" --file .devcontainer/Dockerfile .
+    ;;
+  "") ;;
+  *)
+    printf 'usage: run [build | stop]\n' >&2
+    exit 2
     ;;
 esac
 
-container system start >/dev/null 2>&1 || true
-if ! container inspect "$name" >/dev/null 2>&1; then
-  if ! container image inspect "$image" >/dev/null 2>&1; then
-    image=zmx-based:local
-    container build --tag "$image" --file .devcontainer/Dockerfile .
+if ! "$engine" inspect "$name" >/dev/null 2>&1; then
+  if ! "$engine" image inspect "$image" >/dev/null 2>&1; then
+    "$engine" build --tag "$image" --file .devcontainer/Dockerfile .
   fi
-  container run -d --name "$name" --user vscode \
+  "$engine" run -d --name "$name" --user vscode \
     --volume "$PWD:/workspaces/based" --workdir /workspaces/based \
     "$image" sleep infinity
 else
-  container start "$name" >/dev/null 2>&1 || true
+  "$engine" start "$name" >/dev/null 2>&1 || true
 fi
 
-exec container exec -it --user vscode \
+exec "$engine" exec -it --user vscode \
   --workdir /workspaces/based "$name" zsh -l

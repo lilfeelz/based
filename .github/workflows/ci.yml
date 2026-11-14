@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: test
-        run: test/run --install
+        run: make test-install
 
   build:
     runs-on: ubuntu-latest
@@ -26,7 +26,7 @@ jobs:
       - name: build image
         run: |
           image=$(printf 'ghcr.io/%s:latest' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
-          docker build -t "$image" -f .devcontainer/Dockerfile .
+          make build ENGINE=docker IMAGE="$image"
       - name: publish image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |

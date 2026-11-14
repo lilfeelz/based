@@ -116,11 +116,43 @@ for c in "$root"/config/*; do
   [ -f "$cfg_home/.config/based/${c##*/}" ] || fail "missing config ${c##*/}"
 done
 
+# make: building must never start or attach a container, including under CI's Docker.
+mock docker <<'EOF'
+printf "docker:%s\n" "$*"
+EOF
+eq "$(make -s --no-print-directory -C "$root" build ENGINE=docker IMAGE=based-test:local)" \
+  "docker:build --tag based-test:local --file .devcontainer/Dockerfile ."
+eq "$(make -s --no-print-directory -C "$root" stop ENGINE=docker)" "docker:rm -f zmx-based"
+if BASED_CONTAINER=docker "$root/run" unknown >/dev/null 2>&1; then
+  fail "run accepted an unknown operation"
+fi
+
+# Install dispatch is checked with a fake shell, never against the real home or package manager.
+mock sh <<'EOF'
+printf "sh:%s\n" "$*"
+EOF
+mock uname <<'EOF'
+printf 'Darwin\n'
+EOF
+eq "$(TERMUX_VERSION='' make -s --no-print-directory -C "$root" install)" "sh:install/macos.sh"
+eq "$(TERMUX_VERSION='test' make -s --no-print-directory -C "$root" install)" "sh:install/termux.sh"
+mock uname <<'EOF'
+printf 'Linux\n'
+EOF
+if TERMUX_VERSION='' make -s --no-print-directory -C "$root" install >/dev/null 2>&1; then
+  fail "native Linux install must not run the image's root installer"
+fi
+
 # optional full pinned install check (--install)
 if [ "${1:-}" = "--install" ]; then
   ih="$t/install-home"
-  env -i HOME="$ih" PATH="$orig_path" sh "$root/install/common.sh" zmx dvtm nvim pi config
-  for b in zmx dvtm nvim pi; do
+  if [ "$(env PATH="$orig_path" uname -s)" = Darwin ]; then
+    set -- nvim pi rift
+  else
+    set -- zmx dvtm nvim pi
+  fi
+  env -i HOME="$ih" PATH="$orig_path" sh "$root/install/common.sh" "$@" config
+  for b in "$@"; do
     [ -x "$ih/.local/bin/$b" ] || fail "missing binary $b"
   done
   for b in "$root"/bin/*; do
