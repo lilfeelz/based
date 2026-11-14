@@ -1,0 +1,30 @@
+# Single-letter Unix primitives for based
+export EDITOR="${EDITOR:-nvim}"
+export FZF_DEFAULT_COMMAND='fd --hidden --follow --exclude .git'
+export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range=:200 {} 2>/dev/null || ls -la {}'"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+
+[ -f /usr/local/share/fzf/key-bindings.zsh ] && . /usr/local/share/fzf/key-bindings.zsh
+
+f() { fd --hidden --follow --exclude .git "$@"; }
+s() { rg --hidden --smart-case --glob '!.git' "$@"; }
+if ls --color=auto / >/dev/null 2>&1; then
+  l() { ls -lahF --color=auto "$@"; }
+else
+  l() { ls -lahFG "$@"; }
+fi
+g() { git "$@"; }
+h() { man "$@"; }
+e() { nvim "$@"; }
+a() { pi "$@"; }
+j() {
+  if [ "$#" -gt 0 ]; then
+    m attach "$@"
+  else
+    { m list; w; } | awk '!seen[$0]++' | fzf --prompt 'mux> ' | m attach
+  fi
+}
+
+PROMPT='${ZMX_SESSION:+[$ZMX_SESSION] }%~ %# '

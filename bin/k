@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+BASED_CONFIG="${BASED_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/based}"
+KEYBINDS="${BASED_KEYBINDS:-$BASED_CONFIG/keybinds.tsv}"
+
+file_for() {
+  case "$1" in
+    zsh) printf '%s/zshrc\n' "$BASED_CONFIG" ;;
+    nvim) printf '%s/init.lua\n' "${BASED_NVIM_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/nvim}" ;;
+    rift) printf '%s/rift.toml\n' "$BASED_CONFIG" ;;
+    *) printf '%s\n' "$KEYBINDS" ;;
+  esac
+}
+
+delete_entry() {
+  [ -f "$KEYBINDS" ] || return 0
+  tool="$1"
+  key="$2"
+  tmp=$(mktemp)
+  awk -F '\t' -v t="$tool" -v k="$key" '!(($1 == t) && ($2 == k))' "$KEYBINDS" > "$tmp"
+  mv "$tmp" "$KEYBINDS"
+}
+
+cmd="${1:-list}"
+case "$cmd" in
+  list)
+    [ -f "$KEYBINDS" ] || exit 0
+    if [ -n "${2:-}" ]; then
+      awk -F '\t' -v t="$2" '$1 == t' "$KEYBINDS"
+    else
+      grep -v '^[[:space:]]*#' "$KEYBINDS" | grep -v '^[[:space:]]*$' || true
+    fi
+    ;;
+  edit)
+    target=$(file_for "${2:-}")
+    exec "${EDITOR:-nvim}" "$target"
+    ;;
+  delete)
+    shift
+    if [ "$#" -ge 2 ]; then
+      delete_entry "$1" "$2"
+    elif [ ! -t 0 ]; then
+      while IFS="$(printf '\t')" read -r tool key _rest; do
+        [ -n "${tool:-}" ] && [ -n "${key:-}" ] && delete_entry "$tool" "$key"
+      done
+    else
+      printf 'usage: k delete TOOL KEY (or pipe from k list)\n' >&2
+      exit 2
+    fi
+    ;;
+  *)
+    printf 'usage: k [list [TOOL] | edit [TOOL] | delete [TOOL KEY]]\n' >&2
+    exit 2
+    ;;
+esac

@@ -1,0 +1,16 @@
+[settings]
+default_disable = false
+animate = false
+inner_gap = 6
+outer_gap = 6
+
+[keys]
+"Alt+H" = { focus = "left" }
+"Alt+J" = { focus = "down" }
+"Alt+K" = { focus = "up" }
+"Alt+L" = { focus = "right" }
+"Alt+Shift+H" = { move = "left" }
+"Alt+Shift+J" = { move = "down" }
+"Alt+Shift+K" = { move = "up" }
+"Alt+Shift+L" = { move = "right" }
+"Alt+F" = "toggle_fullscreen"
