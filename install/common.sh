@@ -51,12 +51,22 @@ for target in "$@"; do
       tmp=$(mktemp -d)
       fetch "https://github.com/martanne/dvtm/archive/${commit}.tar.gz" "$sha" "$tmp/dvtm.tar.gz"
       tar xzf "$tmp/dvtm.tar.gz" -C "$tmp" --strip-components=1
+      # Darwin hides SIGWINCH under dvtm's strict POSIX feature flags.
+      if [ "$(uname -s)" = Darwin ]; then
+        printf '\nCPPFLAGS += -D_DARWIN_C_SOURCE\nLIBS = -lc -lutil -lncurses\n' >>"$tmp/config.mk"
+        # Darwin's headers also expose the socket send() function.
+        for src in dvtm.c config.def.h; do
+          sed -E 's/(^|[^[:alnum:]_])send([^[:alnum:]_]|$)/\1sendkeys\2/g' "$tmp/$src" >"$tmp/$src.new"
+          mv "$tmp/$src.new" "$tmp/$src"
+        done
+      fi
       make -C "$tmp" PREFIX="$(dirname "$BASED_BIN")" dvtm dvtm-editor
       mkdir -p "$BASED_BIN"
       for b in dvtm dvtm-status dvtm-editor dvtm-pager; do
         cp -f "$tmp/$b" "$BASED_BIN/$b"
         chmod 0755 "$BASED_BIN/$b"
       done
+      tic -x -o "$BASED_HOME/.terminfo" "$tmp/dvtm.info"
       rm -rf "$tmp"
       printf 'based: dvtm %s -> %s/dvtm\n' "$commit" "$BASED_BIN"
       ;;
@@ -99,22 +109,6 @@ for target in "$@"; do
         printf 'based: pi %s -> %s/pi\n' "$ver" "$BASED_BIN"
       fi
       ;;
-    rift)
-      if [ "$(uname -s)" = Darwin ]; then
-        ver=$(pin '.rift.version')
-        sha=$(pin '.rift.sha256')
-        tmp=$(mktemp -d)
-        fetch "https://github.com/acsandmann/rift/releases/download/v${ver}/rift-universal-macos-${ver}.tar.gz" "$sha" "$tmp/rift.tar.gz"
-        tar xzf "$tmp/rift.tar.gz" -C "$tmp"
-        mkdir -p "$BASED_BIN"
-        for b in rift rift-cli; do
-          cp "$tmp/$b" "$BASED_BIN/$b"
-          chmod 0755 "$BASED_BIN/$b"
-        done
-        rm -rf "$tmp"
-        printf 'based: rift %s -> %s/rift\n' "$ver" "$BASED_BIN"
-      fi
-      ;;
     config)
       mkdir -p "$BASED_NVIM_CONFIG" "$BASED_CONFIG" "$BASED_BIN"
       if [ -f "$BASED_NVIM_CONFIG/init.lua" ] &&
@@ -131,9 +125,6 @@ for target in "$@"; do
         cp "$b" "$BASED_BIN/$name"
         chmod 0755 "$BASED_BIN/$name"
       done
-      if [ -x /Applications/Rex.app/Contents/Resources/bin/rex ] && [ ! -e "$BASED_BIN/rex" ]; then
-        ln -sf /Applications/Rex.app/Contents/Resources/bin/rex "$BASED_BIN/rex"
-      fi
       if [ -n "${BASED_ZSHRC:-}" ]; then
         cp "$BASED_ROOT/config/zshrc" "$BASED_ZSHRC"
       fi

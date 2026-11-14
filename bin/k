@@ -18,7 +18,6 @@ case "$cmd" in
     case "${2:-}" in
       zsh) target="$BASED_CONFIG/zshrc" ;;
       nvim) target="${BASED_NVIM_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/nvim}/init.lua" ;;
-      rift) target="$BASED_CONFIG/rift.toml" ;;
       *) target="$KEYBINDS" ;;
     esac
     exec "${EDITOR:-nvim}" "$target"

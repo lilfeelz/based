@@ -62,9 +62,5 @@
       "asset": "pi-darwin-x64.tar.gz",
       "sha256": "f997a088613514ac97d913aeea7642094d84fe6d46854ff7e64e2c12e536dc50"
     }
-  },
-  "rift": {
-    "version": "0.8.2",
-    "sha256": "07444ca97918fa90c401e6310a840d0aca7074c2ab4173a28c1aa64068d689d9"
   }
 }

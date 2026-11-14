@@ -2,8 +2,7 @@
 
 Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines:
 
-- **Android (Termux)** and **Linux / Container**: `zmx` for persistent sessions and `dvtm` for pane tiling.
-- **macOS**: `rex` for sessions and `rift` for window tiling.
+Use any terminal. `zmx` keeps sessions alive and `dvtm` tiles panes on every platform.
 
 ## Primitives
 
@@ -37,11 +36,11 @@ f | fzf | xargs e                   # find file and open in nvim
 
 ## Keybinds
 
-Bindings follow consistent patterns across `zsh`, `nvim`, `pi`, `dvtm`, and `rex` (plus `rift` on macOS):
+Bindings follow consistent patterns across `zsh`, `nvim`, `pi`, and `dvtm`:
 
-- **Leader**: `C-/` across `nvim`, `pi`, and `dvtm` (`Cmd` in `rex`, `CAG` / `Hyper` in `rift`).
+- **Leader**: `C-/` in `nvim` and `pi`; `C-g` in `dvtm` so pane commands do not consume editor shortcuts.
 - **One-letter actions**: `f` files, `s` search, `b` buffers, `o` oldfiles, `w` word or workspaces, `j` jump session, `d` detach or device, `e` editor, `a` agent.
-- **Navigation and layout**: `h/j/k/l` directional focus, move, and resize; `i/o` prev/next workspace; `n/N` next/prev window or match; `Space` cycle layout or open Rex; `Enter` zoom pane to master.
+- **Pane controls**: in `dvtm`, `C-g j/k` selects next/previous pane, `C-g h/l` resizes the master area, `C-g Space` cycles layouts, and `C-g Enter` zooms a pane to master.
 
 Full reference in [config/keybinds.tsv](config/keybinds.tsv) (or run `k list [tool]`).
 

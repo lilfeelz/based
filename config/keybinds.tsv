@@ -1,11 +1,11 @@
-dvtm	C-/ ?	dvtm help
-dvtm	C-/ Enter	zoom pane to master
-dvtm	C-/ Space	cycle layout
-dvtm	C-/ c	new shell pane
-dvtm	C-/ h/l	resize master area
-dvtm	C-/ j/k	next/prev pane
-dvtm	C-/ q	quit all panes
-dvtm	C-/ x	close pane
+dvtm	C-g ?	dvtm help
+dvtm	C-g Enter	zoom pane to master
+dvtm	C-g Space	cycle layout
+dvtm	C-g c	new shell pane
+dvtm	C-g h/l	resize master area
+dvtm	C-g j/k	next/prev pane
+dvtm	C-g q	quit all panes
+dvtm	C-g x	close pane
 nvim	C-/ b	fzf buffers
 nvim	C-/ d	mux detach session
 nvim	C-/ f	fzf files
@@ -16,22 +16,6 @@ nvim	C-/ w	fzf grep word
 pi	C-/	leader menu
 pi	C-o	edit prompt in nvim
 pi	Esc	vim normal mode
-rex	Cmd+F	file picker
-rex	Cmd+G	workspace picker
-rex	Cmd+S	search picker
-rift	CAG+H	focus window left
-rift	CAG+I	prev workspace
-rift	CAG+J	focus window down
-rift	CAG+K	focus window up
-rift	CAG+L	focus window right
-rift	CAG+N	focus next window
-rift	CAG+O	next workspace
-rift	CAG+Space	open Rex
-rift	Hyper+H	move window left
-rift	Hyper+J	move window down
-rift	Hyper+K	move window up
-rift	Hyper+L	move window right
-rift	Hyper+N	focus prev window
 zsh	Alt+C	fzf cd directory
 zsh	C-r	fzf command history
 zsh	C-t	fzf paste file path

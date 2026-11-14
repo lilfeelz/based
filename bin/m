@@ -2,14 +2,6 @@
 set -eu
 export ZMX_NO_DETACH_KEY=1
 
-if [ -n "${BASED_MUX:-}" ]; then
-  mux="$BASED_MUX"
-elif [ "$(uname -s)" = Darwin ]; then
-  mux=rex
-else
-  mux=zmx
-fi
-
 resolve_target() {
   t="$1"
   case "$t" in
@@ -29,16 +21,10 @@ resolve_target() {
 cmd="${1:-list}"
 case "$cmd" in
   list)
-    case "$mux" in
-      rex) rex ls 2>/dev/null | awk 'NR>1 {print $2}' || true ;;
-      *) zmx list --short 2>/dev/null || true ;;
-    esac
+    zmx list --short 2>/dev/null || true
     ;;
   detach)
-    case "$mux" in
-      rex) rex detach ;;
-      *) zmx detach ;;
-    esac
+    zmx detach
     ;;
   delete)
     shift
@@ -49,10 +35,7 @@ case "$cmd" in
     fi | while IFS= read -r target; do
       [ -n "$target" ] || continue
       resolve_target "$target"
-      case "$mux" in
-        rex) rex kill "$name" ;;
-        *) zmx kill "$name" ;;
-      esac
+      zmx kill "$name"
     done
     ;;
   *)
@@ -70,19 +53,15 @@ case "$cmd" in
     fi
     [ -n "$target" ] || exit 0
     resolve_target "$target"
-    case "$mux" in
-      rex)
-        if ! rex ls 2>/dev/null | awk 'NR>1 {print $2}' | grep -qxF "$name"; then
-          rex new "$name" -c "$dir" --window zsh -- /bin/zsh -l >/dev/null
-        fi
-        exec rex attach "$name"
-        ;;
-      *)
-        cd "$dir"
-        SHELL="${SHELL:-$(command -v zsh || command -v sh)}"
-        export SHELL
-        exec zmx attach "$name" dvtm -m '^_'
-        ;;
-    esac
+    cd "$dir"
+    SHELL="${SHELL:-$(command -v zsh || command -v sh)}"
+    export SHELL
+    # zmx 0.8.1 switches by name only; create the target before asking the current client to switch.
+    if [ -n "${ZMX_SESSION:-}" ]; then
+      ZMX_SESSION='' zmx attach "$name" dvtm -m '^G' </dev/null >/dev/null
+    elif [ ! -t 0 ]; then
+      exec </dev/tty
+    fi
+    exec zmx attach "$name" dvtm -m '^G'
     ;;
 esac
