@@ -38,7 +38,7 @@ f | fzf | xargs e            # find file and open in nvim
 
 ## Install
 
-All core components (`zmx`, `dvtm`, `nvim`, `pi`, `fzf-lua`, `rift`) are fetched directly via `curl` with pinned commits/releases and SHA256 verification in `install/pins.sh`.
+All core components (`zmx`, `dvtm`, `nvim`, `pi`, `fzf-lua`, `rift`) are fetched directly via `curl` with pinned commits/releases and SHA256 verification in `install/pins.json`.
 
 ```sh
 ./install/termux.sh     # Termux: zmx, dvtm (built from source), nvim, pi, fzf-lua

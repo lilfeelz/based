@@ -4,13 +4,21 @@ animate = false
 inner_gap = 6
 outer_gap = 6
 
+[modifier_combinations]
+cag = "Ctrl + Alt + Meta"
+hyper = "Ctrl + Alt + Meta + Shift"
+
 [keys]
-"Alt+H" = { focus = "left" }
-"Alt+J" = { focus = "down" }
-"Alt+K" = { focus = "up" }
-"Alt+L" = { focus = "right" }
-"Alt+Shift+H" = { move = "left" }
-"Alt+Shift+J" = { move = "down" }
-"Alt+Shift+K" = { move = "up" }
-"Alt+Shift+L" = { move = "right" }
-"Alt+F" = "toggle_fullscreen"
+"cag + H" = { move_focus = "left" }
+"cag + J" = { move_focus = "down" }
+"cag + K" = { move_focus = "up" }
+"cag + L" = { move_focus = "right" }
+"cag + N" = "next_window"
+"hyper + H" = { move_node = "left" }
+"hyper + J" = { move_node = "down" }
+"hyper + K" = { move_node = "up" }
+"hyper + L" = { move_node = "right" }
+"hyper + N" = "prev_window"
+"cag + I" = "prev_workspace"
+"cag + O" = "next_workspace"
+"cag + Space" = { exec = ["/usr/bin/open", "-a", "Rex"] }
