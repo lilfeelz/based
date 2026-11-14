@@ -1,0 +1,129 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+t=$(mktemp -d)
+trap 'rm -rf "$t"' EXIT
+
+fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
+eq() { [ "$1" = "$2" ] || fail "expected '$2', got '$1'"; }
+has() { printf '%s\n' "$1" | grep -qxF "$2" || fail "missing '$2' in '$1'"; }
+
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck -x -P SCRIPTDIR -s sh "$root"/bin/* "$root"/install/*.sh "$root"/test/run "$root"/run
+fi
+jq empty "$root/install/pins.json"
+
+export HOME="$t/home"
+export PATH="$t/mock:$root/bin:$PATH"
+export BASED_CONFIG="$HOME/.config/based"
+export BASED_NVIM_CONFIG="$HOME/.config/nvim"
+mkdir -p "$HOME" "$t/mock"
+
+mock() {
+  { printf '#!/bin/sh\n'; cat; } > "$t/mock/$1"
+  chmod 0755 "$t/mock/$1"
+}
+
+tilde='~'
+
+# w: lists workspace directories
+mkdir -p "$HOME/Notes/topic" "$HOME/Workspaces/ctx/proj"
+out=$(cd "$HOME" && w)
+has "$out" "$tilde"
+has "$out" "$tilde/Notes"
+has "$out" "$tilde/Notes/topic"
+has "$out" "$tilde/Workspaces/ctx/proj"
+
+# m (zmx): list, attach via stdin, detach, delete via stdin
+export BASED_MUX=zmx
+mock zmx <<'EOF'
+printf "zmx:%s\n" "$*"
+EOF
+mkdir -p "$HOME/Workspaces/ctx/demo"
+eq "$(m list)" "zmx:list --short"
+eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^a"
+eq "$(m detach)" "zmx:detach"
+eq "$(printf 'one\ntwo\n' | m delete)" "$(printf 'zmx:kill one\nzmx:kill two')"
+
+# m (rex): list, attach, delete
+export BASED_MUX=rex
+mock rex <<'EOF'
+if [ "$1" = ls ]; then printf "ID NAME\n1 alpha\n"; else printf "rex:%s\n" "$*"; fi
+EOF
+eq "$(m list)" "alpha"
+eq "$(m attach alpha)" "rex:attach alpha"
+eq "$(m delete alpha)" "rex:kill alpha"
+
+# d: lists ssh hosts and connects
+export SSH_CONFIG="$t/ssh_config"
+printf 'Host *\n  User j\nHost book pixel\n  HostName 10.0.0.1\n' > "$SSH_CONFIG"
+mock tailscale <<'EOF'
+exit 1
+EOF
+mock ssh <<'EOF'
+printf "ssh:%s\n" "$*"
+EOF
+eq "$(d list)" "$(printf 'book\npixel')"
+eq "$(printf 'pixel\n' | d)" "ssh:-t -- pixel"
+eq "$(d book m list)" "ssh:-t -- book m list"
+
+# k: list, delete via stdin, edit
+mkdir -p "$BASED_CONFIG"
+printf 'zsh\tf\tfd\nzsh\ts\trg\nnvim\t<Space>ff\tfiles\n' > "$BASED_CONFIG/keybinds.tsv"
+eq "$(k list zsh | wc -l | tr -d ' ')" "2"
+printf 'zsh\tf\tfd\n' | k delete
+eq "$(k list)" "$(printf 'zsh\ts\trg\nnvim\t<Space>ff\tfiles')"
+eq "$(EDITOR="echo" k edit zsh)" "$BASED_CONFIG/zshrc"
+
+# install_config and pins.json lookup
+(
+  unset XDG_DATA_HOME XDG_CONFIG_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG
+  HOME="$t/cfg-home"
+  export HOME
+  # shellcheck source=install/common.sh
+  . "$root/install/common.sh"
+  eq "$(pin '.zmx.version')" "0.8.1"
+  install_config >/dev/null
+  for b in "$root"/bin/*; do
+    [ -x "$BASED_BIN/${b##*/}" ] || fail "missing primitive ${b##*/}"
+  done
+  [ -L "$BASED_BIN/j" ] || fail "missing j link"
+  [ -f "$BASED_NVIM_CONFIG/init.lua" ] || fail "missing init.lua"
+  for c in "$root"/config/*; do
+    [ "${c##*/}" = init.lua ] && continue
+    [ -f "$BASED_CONFIG/${c##*/}" ] || fail "missing config ${c##*/}"
+  done
+)
+
+# optional full pinned install check (--install)
+if [ "${1:-}" = "--install" ]; then
+  ih="$t/install-home"
+  (
+    unset XDG_DATA_HOME XDG_CONFIG_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG
+    HOME="$ih"
+    export HOME
+    # shellcheck source=install/common.sh
+    . "$root/install/common.sh"
+    install_zmx
+    install_dvtm
+    install_nvim
+    install_pi
+    install_fzf_lua
+    install_config
+    for b in zmx dvtm nvim pi j; do
+      [ -x "$BASED_BIN/$b" ] || fail "missing binary $b"
+    done
+    for b in "$root"/bin/*; do
+      [ -x "$BASED_BIN/${b##*/}" ] || fail "missing primitive ${b##*/}"
+    done
+    [ -f "$BASED_NVIM_CONFIG/init.lua" ] || fail "missing init.lua"
+    for c in "$root"/config/*; do
+      [ "${c##*/}" = init.lua ] && continue
+      [ -f "$BASED_CONFIG/${c##*/}" ] || fail "missing config ${c##*/}"
+    done
+    [ -d "$BASED_DATA/fzf-lua" ] || fail "missing fzf-lua"
+  )
+fi
+
+printf 'ok\n'

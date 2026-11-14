@@ -8,18 +8,15 @@ set -eu
 
 BASED_HOME="${BASED_HOME:-/home/vscode}"
 BASED_BIN=/usr/local/bin
-BASED_DATA="$BASED_HOME/.local/share/nvim"
-BASED_NVIM_CONFIG="$BASED_HOME/.config/nvim"
-BASED_CONFIG="$BASED_HOME/.config/based"
 BASED_ZSHRC="$BASED_HOME/.zshrc"
-export BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG BASED_ZSHRC
+export BASED_HOME BASED_BIN BASED_ZSHRC
 
 # shellcheck source=install/common.sh
 . "$(dirname "$0")/common.sh"
 
 apt-get update
 apt-get install -y --no-install-recommends \
-  bat build-essential ca-certificates curl fd-find fzf git libncurses-dev \
+  bat build-essential ca-certificates curl fd-find fzf git jq libncurses-dev \
   man-db openssh-client ripgrep tar zsh
 rm -rf /var/lib/apt/lists/*
 ln -sf /usr/bin/batcat /usr/local/bin/bat

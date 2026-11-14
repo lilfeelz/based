@@ -1,18 +1,27 @@
 #!/bin/sh
 set -eu
 
-: "${BASED_BIN:?BASED_BIN is required}"
-: "${BASED_DATA:?BASED_DATA is required}"
-: "${BASED_NVIM_CONFIG:?BASED_NVIM_CONFIG is required}"
-
 BASED_ROOT="${BASED_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}"
-BASED_CONFIG="${BASED_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/based}"
-
-# shellcheck source=install/pins.sh
-. "$BASED_ROOT/install/pins.sh"
+BASED_HOME="${BASED_HOME:-$HOME}"
+BASED_BIN="${BASED_BIN:-${PREFIX:+$PREFIX/bin}}"
+BASED_BIN="${BASED_BIN:-$BASED_HOME/.local/bin}"
+BASED_DATA="${BASED_DATA:-${XDG_DATA_HOME:-$BASED_HOME/.local/share}/nvim}"
+BASED_NVIM_CONFIG="${BASED_NVIM_CONFIG:-${XDG_CONFIG_HOME:-$BASED_HOME/.config}/nvim}"
+BASED_CONFIG="${BASED_CONFIG:-${XDG_CONFIG_HOME:-$BASED_HOME/.config}/based}"
+BASED_PINS="${BASED_PINS:-$BASED_ROOT/install/pins.json}"
 
 log() { printf 'based: %s\n' "$*"; }
 die() { printf 'based: %s\n' "$*" >&2; exit 1; }
+
+pin() {
+  jq -er "$1" "$BASED_PINS" || die "missing pin: $1"
+}
+
+platform() {
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  arch=$(uname -m | sed 's/^amd64$/x86_64/;s/^arm64$/aarch64/')
+  printf '%s-%s\n' "$os" "$arch"
+}
 
 sha256() {
   if command -v sha256sum >/dev/null 2>&1; then
@@ -32,34 +41,25 @@ fetch() {
 }
 
 install_zmx() {
-  case "$(uname -s):$(uname -m)" in
-    Linux:x86_64|Linux:amd64)
-      asset="zmx-${ZMX_VERSION}-linux-x86_64.tar.gz"
-      sha="$ZMX_SHA_LINUX_X86_64" ;;
-    Linux:arm64|Linux:aarch64)
-      asset="zmx-${ZMX_VERSION}-linux-aarch64.tar.gz"
-      sha="$ZMX_SHA_LINUX_AARCH64" ;;
-    Darwin:arm64|Darwin:aarch64)
-      asset="zmx-${ZMX_VERSION}-macos-aarch64.tar.gz"
-      sha="$ZMX_SHA_MACOS_AARCH64" ;;
-    Darwin:x86_64|Darwin:amd64)
-      asset="zmx-${ZMX_VERSION}-macos-x86_64.tar.gz"
-      sha="$ZMX_SHA_MACOS_X86_64" ;;
-    *) die "unsupported platform for zmx: $(uname -s) $(uname -m)" ;;
-  esac
+  plat=$(platform)
+  ver=$(pin '.zmx.version')
+  asset=$(pin ".zmx[\"$plat\"].asset")
+  sha=$(pin ".zmx[\"$plat\"].sha256")
   tmp=$(mktemp -d)
-  fetch "https://github.com/neurosnap/zmx/releases/download/v${ZMX_VERSION}/${asset}" "$sha" "$tmp/$asset"
+  fetch "https://github.com/neurosnap/zmx/releases/download/v${ver}/${asset}" "$sha" "$tmp/$asset"
   tar xzf "$tmp/$asset" -C "$tmp"
   mkdir -p "$BASED_BIN"
   cp "$tmp/zmx" "$BASED_BIN/zmx"
   chmod 0755 "$BASED_BIN/zmx"
   rm -rf "$tmp"
-  log "zmx $ZMX_VERSION -> $BASED_BIN/zmx"
+  log "zmx $ver -> $BASED_BIN/zmx"
 }
 
 install_dvtm() {
+  commit=$(pin '.dvtm.commit')
+  sha=$(pin '.dvtm.sha256')
   tmp=$(mktemp -d)
-  fetch "https://github.com/martanne/dvtm/archive/${DVTM_COMMIT}.tar.gz" "$DVTM_SHA" "$tmp/dvtm.tar.gz"
+  fetch "https://github.com/martanne/dvtm/archive/${commit}.tar.gz" "$sha" "$tmp/dvtm.tar.gz"
   tar xzf "$tmp/dvtm.tar.gz" -C "$tmp" --strip-components=1
   make -C "$tmp" PREFIX="$(dirname "$BASED_BIN")" dvtm dvtm-editor
   mkdir -p "$BASED_BIN"
@@ -68,77 +68,58 @@ install_dvtm() {
     chmod 0755 "$BASED_BIN/$b"
   done
   rm -rf "$tmp"
-  log "dvtm $DVTM_COMMIT -> $BASED_BIN/dvtm"
+  log "dvtm $commit -> $BASED_BIN/dvtm"
 }
 
 install_nvim() {
-  case "$(uname -s):$(uname -m)" in
-    Linux:x86_64|Linux:amd64)
-      asset="nvim-linux-x86_64.tar.gz"
-      sha="$NVIM_SHA_LINUX_X86_64" ;;
-    Linux:arm64|Linux:aarch64)
-      asset="nvim-linux-arm64.tar.gz"
-      sha="$NVIM_SHA_LINUX_ARM64" ;;
-    Darwin:arm64|Darwin:aarch64)
-      asset="nvim-macos-arm64.tar.gz"
-      sha="$NVIM_SHA_MACOS_ARM64" ;;
-    Darwin:x86_64|Darwin:amd64)
-      asset="nvim-macos-x86_64.tar.gz"
-      sha="$NVIM_SHA_MACOS_X86_64" ;;
-    *) die "unsupported platform for nvim: $(uname -s) $(uname -m)" ;;
-  esac
+  plat=$(platform)
+  ver=$(pin '.nvim.version')
+  asset=$(pin ".nvim[\"$plat\"].asset")
+  sha=$(pin ".nvim[\"$plat\"].sha256")
   dest="$BASED_DATA/nvim-dist"
   tmp=$(mktemp)
-  fetch "https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/${asset}" "$sha" "$tmp"
+  fetch "https://github.com/neovim/neovim/releases/download/v${ver}/${asset}" "$sha" "$tmp"
   rm -rf "$dest"
   mkdir -p "$dest" "$BASED_BIN"
   tar xzf "$tmp" -C "$dest" --strip-components=1
   rm -f "$tmp"
   ln -sf "$dest/bin/nvim" "$BASED_BIN/nvim"
-  log "nvim $NVIM_VERSION -> $BASED_BIN/nvim"
+  log "nvim $ver -> $BASED_BIN/nvim"
 }
 
 install_pi() {
+  ver=$(pin '.pi.version')
   dest="$BASED_DATA/pi"
   mkdir -p "$BASED_BIN"
   if [ -n "${TERMUX_VERSION:-}" ]; then
+    sha=$(pin '.pi.npm.sha256')
     tmp=$(mktemp)
-    fetch "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-${PI_VERSION}.tgz" "$PI_NPM_TGZ_SHA" "$tmp"
+    fetch "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-${ver}.tgz" "$sha" "$tmp"
     npm install -g --prefix "$(dirname "$BASED_BIN")" "$tmp"
     rm -f "$tmp"
-    log "pi $PI_VERSION (npm) -> $BASED_BIN/pi"
+    log "pi $ver (npm) -> $BASED_BIN/pi"
     return
   fi
-  case "$(uname -s):$(uname -m)" in
-    Linux:x86_64|Linux:amd64)
-      asset="pi-linux-x64.tar.gz"
-      sha="$PI_SHA_LINUX_X64" ;;
-    Linux:arm64|Linux:aarch64)
-      asset="pi-linux-arm64.tar.gz"
-      sha="$PI_SHA_LINUX_ARM64" ;;
-    Darwin:arm64|Darwin:aarch64)
-      asset="pi-darwin-arm64.tar.gz"
-      sha="$PI_SHA_DARWIN_ARM64" ;;
-    Darwin:x86_64|Darwin:amd64)
-      asset="pi-darwin-x64.tar.gz"
-      sha="$PI_SHA_DARWIN_X64" ;;
-    *) die "unsupported platform for pi: $(uname -s) $(uname -m)" ;;
-  esac
+  plat=$(platform)
+  asset=$(pin ".pi[\"$plat\"].asset")
+  sha=$(pin ".pi[\"$plat\"].sha256")
   tmp=$(mktemp)
-  fetch "https://github.com/earendil-works/pi/releases/download/v${PI_VERSION}/${asset}" "$sha" "$tmp"
+  fetch "https://github.com/earendil-works/pi/releases/download/v${ver}/${asset}" "$sha" "$tmp"
   rm -rf "$dest"
   mkdir -p "$dest"
   tar xzf "$tmp" -C "$dest" --strip-components=1
   rm -f "$tmp"
   chmod 0755 "$dest/pi"
   ln -sf "$dest/pi" "$BASED_BIN/pi"
-  log "pi $PI_VERSION -> $BASED_BIN/pi"
+  log "pi $ver -> $BASED_BIN/pi"
 }
 
 install_rift() {
   [ "$(uname -s)" = Darwin ] || return 0
+  ver=$(pin '.rift.version')
+  sha=$(pin '.rift.sha256')
   tmp=$(mktemp -d)
-  fetch "https://github.com/acsandmann/rift/releases/download/v${RIFT_VERSION}/rift-universal-macos-${RIFT_VERSION}.tar.gz" "$RIFT_SHA_MACOS" "$tmp/rift.tar.gz"
+  fetch "https://github.com/acsandmann/rift/releases/download/v${ver}/rift-universal-macos-${ver}.tar.gz" "$sha" "$tmp/rift.tar.gz"
   tar xzf "$tmp/rift.tar.gz" -C "$tmp"
   mkdir -p "$BASED_BIN"
   for b in rift rift-cli; do
@@ -146,18 +127,20 @@ install_rift() {
     chmod 0755 "$BASED_BIN/$b"
   done
   rm -rf "$tmp"
-  log "rift $RIFT_VERSION -> $BASED_BIN/rift"
+  log "rift $ver -> $BASED_BIN/rift"
 }
 
 install_fzf_lua() {
+  commit=$(pin '."fzf-lua".commit')
+  sha=$(pin '."fzf-lua".sha256')
   dest="$BASED_DATA/fzf-lua"
   tmp=$(mktemp)
-  fetch "https://github.com/ibhagwan/fzf-lua/archive/${FZF_LUA_COMMIT}.tar.gz" "$FZF_LUA_SHA" "$tmp"
+  fetch "https://github.com/ibhagwan/fzf-lua/archive/${commit}.tar.gz" "$sha" "$tmp"
   rm -rf "$dest"
   mkdir -p "$dest"
   tar xzf "$tmp" -C "$dest" --strip-components=1
   rm -f "$tmp"
-  log "fzf-lua $FZF_LUA_COMMIT -> $dest"
+  log "fzf-lua $commit -> $dest"
 }
 
 install_config() {
@@ -167,16 +150,18 @@ install_config() {
     cp "$BASED_NVIM_CONFIG/init.lua" "$BASED_NVIM_CONFIG/init.lua.based-backup"
   fi
   cp "$BASED_ROOT/config/init.lua" "$BASED_NVIM_CONFIG/init.lua"
-  cp "$BASED_ROOT/config/zshrc" "$BASED_CONFIG/zshrc"
-  cp "$BASED_ROOT/config/keybinds.tsv" "$BASED_CONFIG/keybinds.tsv"
-  cp "$BASED_ROOT/config/rift.toml" "$BASED_CONFIG/rift.toml"
-  for b in w m d k; do
-    cp "$BASED_ROOT/bin/$b" "$BASED_BIN/$b"
-    chmod 0755 "$BASED_BIN/$b"
+  for c in "$BASED_ROOT"/config/*; do
+    [ "${c##*/}" = init.lua ] && continue
+    cp "$c" "$BASED_CONFIG/${c##*/}"
+  done
+  for b in "$BASED_ROOT"/bin/*; do
+    name="${b##*/}"
+    cp "$b" "$BASED_BIN/$name"
+    chmod 0755 "$BASED_BIN/$name"
   done
   ln -sf "$BASED_BIN/m" "$BASED_BIN/j"
   if [ -n "${BASED_ZSHRC:-}" ]; then
     cp "$BASED_ROOT/config/zshrc" "$BASED_ZSHRC"
   fi
-  log "primitives (w, m, d, k) and configs installed"
+  log "primitives and configs installed"
 }

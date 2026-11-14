@@ -27,6 +27,7 @@ pi	Ctrl+X	leader menu
 rex	Cmd+G	workspace picker
 rex	Cmd+F	file picker
 rex	Cmd+S	search picker
-rift	Alt+H/J/K/L	focus window left/down/up/right
-rift	Alt+Shift+H/J/K/L	move window left/down/up/right
-rift	Alt+F	toggle fullscreen
+rift	CAG+H/J/K/L/N	focus window left/down/up/right/next
+rift	Hyper+H/J/K/L/N	move window left/down/up/right or focus prev
+rift	CAG+I/O	prev/next workspace
+rift	CAG+Space	open Rex
