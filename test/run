@@ -5,15 +5,16 @@ root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 t=$(mktemp -d)
 trap 'rm -rf "$t"' EXIT
 
-fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
+fail() {
+  printf 'FAIL: %s\n' "$*" >&2
+  exit 1
+}
 eq() { [ "$1" = "$2" ] || fail "expected '$2', got '$1'"; }
 has() { printf '%s\n' "$1" | grep -qxF "$2" || fail "missing '$2' in '$1'"; }
 
-if command -v shellcheck >/dev/null 2>&1; then
-  shellcheck -x -P SCRIPTDIR -s sh "$root"/bin/* "$root"/install/*.sh "$root"/test/run "$root"/run
-fi
-jq empty "$root/install/pins.json"
+sh "$root/.githooks/pre-commit"
 
+orig_path="$PATH"
 export HOME="$t/home"
 export PATH="$t/mock:$root/bin:$PATH"
 export BASED_CONFIG="$HOME/.config/based"
@@ -21,11 +22,28 @@ export BASED_NVIM_CONFIG="$HOME/.config/nvim"
 mkdir -p "$HOME" "$t/mock"
 
 mock() {
-  { printf '#!/bin/sh\n'; cat; } > "$t/mock/$1"
+  {
+    printf '#!/bin/sh\n'
+    cat
+  } >"$t/mock/$1"
   chmod 0755 "$t/mock/$1"
 }
 
 tilde='~'
+
+# a, e, f, g, h, s: single-letter wrappers
+for cmd in pi nvim fd git man rg; do
+  mock "$cmd" <<EOF
+printf "$cmd:%s\n" "\$*"
+EOF
+done
+eq "$(a fix)" "pi:fix"
+eq "$(e file.txt)" "nvim:file.txt"
+eq "$(f pat)" "fd:--hidden --follow --exclude .git pat"
+eq "$(g status)" "git:status"
+eq "$(h ls)" "man:ls"
+eq "$(s needle)" "rg:--hidden --smart-case --glob !.git needle"
+[ -n "$(l "$HOME")" ] || fail "l produced empty output"
 
 # w: lists workspace directories
 mkdir -p "$HOME/Notes/topic" "$HOME/Workspaces/ctx/proj"
@@ -35,7 +53,7 @@ has "$out" "$tilde/Notes"
 has "$out" "$tilde/Notes/topic"
 has "$out" "$tilde/Workspaces/ctx/proj"
 
-# m (zmx): list, attach via stdin, detach, delete via stdin
+# m (zmx) & j: list, attach via stdin/arg, detach, delete via stdin
 export BASED_MUX=zmx
 mock zmx <<'EOF'
 printf "zmx:%s\n" "$*"
@@ -43,6 +61,7 @@ EOF
 mkdir -p "$HOME/Workspaces/ctx/demo"
 eq "$(m list)" "zmx:list --short"
 eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^a"
+eq "$(j demo)" "zmx:attach demo dvtm -m ^a"
 eq "$(m detach)" "zmx:detach"
 eq "$(printf 'one\ntwo\n' | m delete)" "$(printf 'zmx:kill one\nzmx:kill two')"
 
@@ -57,7 +76,7 @@ eq "$(m delete alpha)" "rex:kill alpha"
 
 # d: lists ssh hosts and connects
 export SSH_CONFIG="$t/ssh_config"
-printf 'Host *\n  User j\nHost book pixel\n  HostName 10.0.0.1\n' > "$SSH_CONFIG"
+printf 'Host *\n  User j\nHost book pixel\n  HostName 10.0.0.1\n' >"$SSH_CONFIG"
 mock tailscale <<'EOF'
 exit 1
 EOF
@@ -70,60 +89,39 @@ eq "$(d book m list)" "ssh:-t -- book m list"
 
 # k: list, delete via stdin, edit
 mkdir -p "$BASED_CONFIG"
-printf 'zsh\tf\tfd\nzsh\ts\trg\nnvim\t<Space>ff\tfiles\n' > "$BASED_CONFIG/keybinds.tsv"
+printf 'nvim\t<Space>ff\tfiles\nzsh\tf\tfd\nzsh\ts\trg\n' >"$BASED_CONFIG/keybinds.tsv"
 eq "$(k list zsh | wc -l | tr -d ' ')" "2"
 printf 'zsh\tf\tfd\n' | k delete
-eq "$(k list)" "$(printf 'zsh\ts\trg\nnvim\t<Space>ff\tfiles')"
+eq "$(k list)" "$(printf 'nvim\t<Space>ff\tfiles\nzsh\ts\trg')"
 eq "$(EDITOR="echo" k edit zsh)" "$BASED_CONFIG/zshrc"
 
-# install_config and pins.json lookup
-(
-  unset PREFIX XDG_DATA_HOME XDG_CONFIG_HOME BASED_ROOT BASED_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG BASED_PINS BASED_ZSHRC
-  HOME="$t/cfg-home"
-  export HOME
-  # shellcheck source=install/common.sh
-  . "$root/install/common.sh"
-  eq "$(pin '.zmx.version')" "0.8.1"
-  install_config >/dev/null
-  for b in "$root"/bin/*; do
-    [ -x "$BASED_BIN/${b##*/}" ] || fail "missing primitive ${b##*/}"
-  done
-  [ -L "$BASED_BIN/j" ] || fail "missing j link"
-  [ -f "$BASED_NVIM_CONFIG/init.lua" ] || fail "missing init.lua"
-  for c in "$root"/config/*; do
-    [ "${c##*/}" = init.lua ] && continue
-    [ -f "$BASED_CONFIG/${c##*/}" ] || fail "missing config ${c##*/}"
-  done
-)
+# install/common.sh config
+cfg_home="$t/cfg-home"
+env -i HOME="$cfg_home" PATH="$orig_path" sh "$root/install/common.sh" config >/dev/null
+for b in "$root"/bin/*; do
+  [ -x "$cfg_home/.local/bin/${b##*/}" ] || fail "missing primitive ${b##*/}"
+done
+[ -f "$cfg_home/.config/nvim/init.lua" ] || fail "missing init.lua"
+for c in "$root"/config/*; do
+  [ "${c##*/}" = init.lua ] && continue
+  [ -f "$cfg_home/.config/based/${c##*/}" ] || fail "missing config ${c##*/}"
+done
 
 # optional full pinned install check (--install)
 if [ "${1:-}" = "--install" ]; then
   ih="$t/install-home"
-  (
-    unset PREFIX XDG_DATA_HOME XDG_CONFIG_HOME BASED_ROOT BASED_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG BASED_PINS BASED_ZSHRC
-    HOME="$ih"
-    export HOME
-    # shellcheck source=install/common.sh
-    . "$root/install/common.sh"
-    install_zmx
-    install_dvtm
-    install_nvim
-    install_pi
-    install_fzf_lua
-    install_config
-    for b in zmx dvtm nvim pi j; do
-      [ -x "$BASED_BIN/$b" ] || fail "missing binary $b"
-    done
-    for b in "$root"/bin/*; do
-      [ -x "$BASED_BIN/${b##*/}" ] || fail "missing primitive ${b##*/}"
-    done
-    [ -f "$BASED_NVIM_CONFIG/init.lua" ] || fail "missing init.lua"
-    for c in "$root"/config/*; do
-      [ "${c##*/}" = init.lua ] && continue
-      [ -f "$BASED_CONFIG/${c##*/}" ] || fail "missing config ${c##*/}"
-    done
-    [ -d "$BASED_DATA/fzf-lua" ] || fail "missing fzf-lua"
-  )
+  env -i HOME="$ih" PATH="$orig_path" sh "$root/install/common.sh" zmx dvtm nvim pi config
+  for b in zmx dvtm nvim pi; do
+    [ -x "$ih/.local/bin/$b" ] || fail "missing binary $b"
+  done
+  for b in "$root"/bin/*; do
+    [ -x "$ih/.local/bin/${b##*/}" ] || fail "missing primitive ${b##*/}"
+  done
+  [ -f "$ih/.config/nvim/init.lua" ] || fail "missing init.lua"
+  for c in "$root"/config/*; do
+    [ "${c##*/}" = init.lua ] && continue
+    [ -f "$ih/.config/based/${c##*/}" ] || fail "missing config ${c##*/}"
+  done
 fi
 
 printf 'ok\n'

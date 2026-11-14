@@ -16,11 +16,4 @@ BASED_BIN="${BASED_BIN:-$PREFIX/bin}"
 BASED_ZSHRC="${BASED_ZSHRC:-$HOME/.zshrc}"
 export BASED_BIN BASED_ZSHRC
 
-# shellcheck source=install/common.sh
-. "$(dirname "$0")/common.sh"
-
-install_zmx
-install_dvtm
-install_pi
-install_fzf_lua
-install_config
+sh "$(dirname "$0")/common.sh" zmx dvtm pi config

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+set -- "$root"/bin/* "$root"/install/*.sh "$root/run" "$root/test/run" "$root/.githooks/pre-commit"
+
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck -x -P SCRIPTDIR -s sh "$@"
+fi
+if command -v shfmt >/dev/null 2>&1; then
+  shfmt -i 2 -ci -d "$@"
+fi
+LC_ALL=C sort -c "$root/config/keybinds.tsv"
+jq empty "$root/install/pins.json"

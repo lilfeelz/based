@@ -1,0 +1,5 @@
+#!/bin/sh
+if ls --color=auto / >/dev/null 2>&1; then
+  exec ls -lahF --color=auto "$@"
+fi
+exec ls -lahFG "$@"
