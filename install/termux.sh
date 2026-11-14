@@ -12,8 +12,9 @@ pkg update -y
 pkg install -y bat clang coreutils curl fd fzf git jq make man ncurses-utils \
   neovim nodejs-lts openssh ripgrep tar zsh
 
+BASED_BIN="${BASED_BIN:-$PREFIX/bin}"
 BASED_ZSHRC="${BASED_ZSHRC:-$HOME/.zshrc}"
-export BASED_ZSHRC
+export BASED_BIN BASED_ZSHRC
 
 # shellcheck source=install/common.sh
 . "$(dirname "$0")/common.sh"

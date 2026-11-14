@@ -3,7 +3,6 @@ set -eu
 
 BASED_ROOT="${BASED_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}"
 BASED_HOME="${BASED_HOME:-$HOME}"
-BASED_BIN="${BASED_BIN:-${PREFIX:+$PREFIX/bin}}"
 BASED_BIN="${BASED_BIN:-$BASED_HOME/.local/bin}"
 BASED_DATA="${BASED_DATA:-${XDG_DATA_HOME:-$BASED_HOME/.local/share}/nvim}"
 BASED_NVIM_CONFIG="${BASED_NVIM_CONFIG:-${XDG_CONFIG_HOME:-$BASED_HOME/.config}/nvim}"

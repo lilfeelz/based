@@ -78,7 +78,7 @@ eq "$(EDITOR="echo" k edit zsh)" "$BASED_CONFIG/zshrc"
 
 # install_config and pins.json lookup
 (
-  unset XDG_DATA_HOME XDG_CONFIG_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG
+  unset PREFIX XDG_DATA_HOME XDG_CONFIG_HOME BASED_ROOT BASED_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG BASED_PINS BASED_ZSHRC
   HOME="$t/cfg-home"
   export HOME
   # shellcheck source=install/common.sh
@@ -100,7 +100,7 @@ eq "$(EDITOR="echo" k edit zsh)" "$BASED_CONFIG/zshrc"
 if [ "${1:-}" = "--install" ]; then
   ih="$t/install-home"
   (
-    unset XDG_DATA_HOME XDG_CONFIG_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG
+    unset PREFIX XDG_DATA_HOME XDG_CONFIG_HOME BASED_ROOT BASED_HOME BASED_BIN BASED_DATA BASED_NVIM_CONFIG BASED_CONFIG BASED_PINS BASED_ZSHRC
     HOME="$ih"
     export HOME
     # shellcheck source=install/common.sh
