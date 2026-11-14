@@ -10,7 +10,7 @@ Composable terminal workspace built around `zsh`, `nvim`, and `pi`. Everything i
 | Command | Action |
 |---|---|
 | `a` | `pi` coding agent (`a [args...]`) |
-| `d` | SSH devices (`d [host [-- cmd...]]`; no arguments lists, `d -- [cmd...]` reads host from stdin) |
+| `d` | SSH devices (`d [<host> [<cmd>...]]`; no arguments lists, `d -- [<cmd>...]` reads host from stdin) |
 | `e` | `nvim` editor (`e [files...]`) |
 | `f` | find files (`fd --hidden --follow --exclude .git`) |
 | `g` | `git` (`g [args...]`) |
@@ -29,7 +29,8 @@ w | fzf | m attach                  # pick workspace and attach session
 m | fzf | m attach                  # switch active session
 m | fzf -m | m delete               # delete selected sessions
 d | fzf | d --                      # pick SSH host and connect
-d host -- w \| fzf \| m attach      # attach workspace session on remote host
+d <host> j                          # pick remote session or workspace
+d <host> m <session>                # attach remote session directly
 k | fzf | k delete                  # delete keybind entry from legend
 f | fzf | xargs e                   # find file and open in nvim
 ```
