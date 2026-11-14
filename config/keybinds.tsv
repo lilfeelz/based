@@ -1,6 +1,10 @@
 dvtm	Ctrl+A ?	dvtm help
+dvtm	Ctrl+A Enter	zoom pane to master
+dvtm	Ctrl+A Space	cycle layout
 dvtm	Ctrl+A c	new shell pane
+dvtm	Ctrl+A h/l	resize master area
 dvtm	Ctrl+A j/k	next/prev pane
+dvtm	Ctrl+A q	quit all panes
 dvtm	Ctrl+A x	close pane
 nvim	<Space>d	mux detach session
 nvim	<Space>fb	fzf buffers
@@ -15,10 +19,22 @@ pi	Esc	vim normal mode
 rex	Cmd+F	file picker
 rex	Cmd+G	workspace picker
 rex	Cmd+S	search picker
-rift	CAG+H/J/K/L/N	focus window left/down/up/right/next
-rift	CAG+I/O	prev/next workspace
+rift	CAG+H	focus window left
+rift	CAG+I	prev workspace
+rift	CAG+J	focus window down
+rift	CAG+K	focus window up
+rift	CAG+L	focus window right
+rift	CAG+N	focus next window
+rift	CAG+O	next workspace
 rift	CAG+Space	open Rex
-rift	Hyper+H/J/K/L/N	move window left/down/up/right or focus prev
+rift	Hyper+H	move window left
+rift	Hyper+J	move window down
+rift	Hyper+K	move window up
+rift	Hyper+L	move window right
+rift	Hyper+N	focus prev window
+zsh	Alt+C	fzf cd directory
+zsh	Ctrl+R	fzf command history
+zsh	Ctrl+T	fzf paste file path
 zsh	a	pi
 zsh	d	ssh host list/connect
 zsh	e	nvim
