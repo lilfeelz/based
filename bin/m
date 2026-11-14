@@ -26,7 +26,7 @@ resolve_target() {
   fi
 }
 
-cmd="${1:-attach}"
+cmd="${1:-list}"
 case "$cmd" in
   list)
     case "$mux" in

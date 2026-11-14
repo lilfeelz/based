@@ -10,7 +10,7 @@ Composable terminal workspace built around `zsh`, `nvim`, and `pi`. Everything i
 | Command | Action |
 |---|---|
 | `a` | `pi` coding agent (`a [args...]`) |
-| `d` | SSH devices (`d [list \| host [-- cmd...]]`; reads host from stdin) |
+| `d` | SSH devices (`d [host [-- cmd...]]`; no arguments lists, `d -- [cmd...]` reads host from stdin) |
 | `e` | `nvim` editor (`e [files...]`) |
 | `f` | find files (`fd --hidden --follow --exclude .git`) |
 | `g` | `git` (`g [args...]`) |
@@ -18,20 +18,20 @@ Composable terminal workspace built around `zsh`, `nvim`, and `pi`. Everything i
 | `j` | fuzzy jump to session or workspace (`j [target]`) |
 | `k` | keybind legend and config (`k [list [tool] \| edit [tool] \| delete [tool key]]`; reads stdin) |
 | `l` | list directory (`ls -lahF`) |
-| `m` | session multiplexer (`m [list \| attach [target] \| detach \| delete [target...]]`; reads stdin) |
+| `m` | session multiplexer (`m [target \| detach \| delete [target...]]`; no arguments lists, `m attach` reads target from stdin) |
 | `s` | search file contents (`rg --hidden --smart-case --glob !.git`) |
 | `w` | list workspace paths (`~`, `~/Notes`, `~/Workspaces/<ctx>[/<proj>]`) |
 
 ## Composition
 
 ```sh
-w | fzf | m                  # pick workspace and attach session
-m list | fzf | m             # switch active session
-m list | fzf -m | m delete   # delete selected sessions
-d list | fzf | d             # pick SSH host and connect
-d host -- w \| fzf \| m      # attach workspace session on remote host
-k list | fzf | k delete      # delete keybind entry from legend
-f | fzf | xargs e            # find file and open in nvim
+w | fzf | m attach                  # pick workspace and attach session
+m | fzf | m attach                  # switch active session
+m | fzf -m | m delete               # delete selected sessions
+d | fzf | d --                      # pick SSH host and connect
+d host -- w \| fzf \| m attach      # attach workspace session on remote host
+k | fzf | k delete                  # delete keybind entry from legend
+f | fzf | xargs e                   # find file and open in nvim
 ```
 
 ## Keybinds

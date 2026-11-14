@@ -12,7 +12,7 @@ map('n', '<leader>b', fzf.buffers, { desc = 'buffers' })
 map('n', '<leader>o', fzf.oldfiles, { desc = 'oldfiles' })
 
 map('n', '<leader>j', function()
-  local out = vim.fn.systemlist({ 'm', 'list' })
+  local out = vim.fn.systemlist({ 'm' })
   if vim.v.shell_error ~= 0 or #out == 0 then
     vim.notify('m: no sessions', vim.log.levels.WARN)
     return
@@ -22,7 +22,7 @@ map('n', '<leader>j', function()
     actions = {
       ['default'] = function(selected)
         if selected and selected[1] then
-          vim.fn.system({ 'm', 'attach', selected[1] })
+          vim.fn.system({ 'm', selected[1] })
         end
       end,
     },
