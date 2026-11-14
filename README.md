@@ -67,6 +67,8 @@ Host based
 
 ## Development
 
+CI tests and builds once on each PR, saving the image as a seven-day artifact. After merge, main downloads and publishes that image without repeating tests or builds. Publication requires the saved source tree to match main; PR checks must be up to date. Missing or stale artifacts fail publication instead of triggering a rebuild.
+
 Run `make` for the command list. `make install` selects the macOS or Termux installer; Linux uses the container image. `make config` installs only primitives and configuration.
 
 ```sh
