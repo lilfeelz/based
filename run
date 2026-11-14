@@ -8,25 +8,32 @@ if [ "$(launchctl managername 2>/dev/null)" != "Aqua" ]; then
   exit 1
 fi
 name=zmx-based
-image=zmx-based:local
+image="${BASED_IMAGE:-ghcr.io/lilfeelz/based:latest}"
 
 case "${1:-}" in
   stop)
     container rm -f "$name" 2>/dev/null || true
     exit 0
     ;;
+  build)
+    image=zmx-based:local
+    container system start >/dev/null 2>&1 || true
+    container build --tag "$image" --file .devcontainer/Dockerfile .
+    ;;
 esac
 
 container system start >/dev/null 2>&1 || true
-container build --tag "$image" --file .devcontainer/Dockerfile .
-
-if container inspect "$name" >/dev/null 2>&1; then
-  container start "$name" >/dev/null 2>&1 || true
-else
+if ! container inspect "$name" >/dev/null 2>&1; then
+  if ! container image inspect "$image" >/dev/null 2>&1; then
+    image=zmx-based:local
+    container build --tag "$image" --file .devcontainer/Dockerfile .
+  fi
   container run -d --name "$name" --user vscode \
     --volume "$PWD:/workspaces/based" --workdir /workspaces/based \
     "$image" sleep infinity
+else
+  container start "$name" >/dev/null 2>&1 || true
 fi
 
 exec container exec -it --user vscode \
-  --workdir /workspaces/based "$name" bash
+  --workdir /workspaces/based "$name" zsh -l

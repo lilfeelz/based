@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+list_hosts() {
+  {
+    if [ -f "${SSH_CONFIG:-$HOME/.ssh/config}" ]; then
+      awk 'tolower($1) == "host" {
+        for (i = 2; i <= NF; i++) if ($i !~ /[*?!]/) print $i
+      }' "${SSH_CONFIG:-$HOME/.ssh/config}"
+    fi
+    if command -v tailscale >/dev/null 2>&1; then
+      tailscale status --self=false 2>/dev/null | awk '{print $2}' || true
+    fi
+  } | awk '!seen[$0]++'
+}
+
+case "${1:-}" in
+  list)
+    list_hosts
+    ;;
+  '')
+    if [ ! -t 0 ]; then
+      IFS= read -r host || exit 0
+      [ -n "$host" ] || exit 0
+      exec ssh -t -- "$host"
+    fi
+    list_hosts
+    ;;
+  -*)
+    printf 'usage: d [list | HOST [CMD...]]\n' >&2
+    exit 2
+    ;;
+  *)
+    host="$1"
+    shift
+    exec ssh -t -- "$host" "$@"
+    ;;
+esac
