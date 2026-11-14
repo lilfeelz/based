@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/lilfeelz/based/compare/v0.1.1...v0.1.2) (2026-11-14)
+
+
+### Features
+
+* add make targets and document remote sessions ([fdc85b9](https://github.com/lilfeelz/based/commit/fdc85b9cd47ae938c93a7ec7ae9545a2d37245d3))
+
 ## [0.1.1](https://github.com/lilfeelz/based/compare/v0.1.0...v0.1.1) (2026-11-14)
 
 
