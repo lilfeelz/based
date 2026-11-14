@@ -1,20 +1,20 @@
-dvtm	Ctrl+A ?	dvtm help
-dvtm	Ctrl+A Enter	zoom pane to master
-dvtm	Ctrl+A Space	cycle layout
-dvtm	Ctrl+A c	new shell pane
-dvtm	Ctrl+A h/l	resize master area
-dvtm	Ctrl+A j/k	next/prev pane
-dvtm	Ctrl+A q	quit all panes
-dvtm	Ctrl+A x	close pane
-nvim	<Space>d	mux detach session
-nvim	<Space>fb	fzf buffers
-nvim	<Space>ff	fzf files
-nvim	<Space>fg	fzf live grep
-nvim	<Space>fr	fzf recent files
-nvim	<Space>fw	fzf grep word
-nvim	<Space>j	mux switch session
-pi	Ctrl+O	edit prompt in nvim
-pi	Ctrl+X	leader menu
+dvtm	C-/ ?	dvtm help
+dvtm	C-/ Enter	zoom pane to master
+dvtm	C-/ Space	cycle layout
+dvtm	C-/ c	new shell pane
+dvtm	C-/ h/l	resize master area
+dvtm	C-/ j/k	next/prev pane
+dvtm	C-/ q	quit all panes
+dvtm	C-/ x	close pane
+nvim	C-/ b	fzf buffers
+nvim	C-/ d	mux detach session
+nvim	C-/ f	fzf files
+nvim	C-/ j	mux switch session
+nvim	C-/ o	fzf oldfiles
+nvim	C-/ s	fzf live grep
+nvim	C-/ w	fzf grep word
+pi	C-/	leader menu
+pi	C-o	edit prompt in nvim
 pi	Esc	vim normal mode
 rex	Cmd+F	file picker
 rex	Cmd+G	workspace picker
@@ -33,8 +33,8 @@ rift	Hyper+K	move window up
 rift	Hyper+L	move window right
 rift	Hyper+N	focus prev window
 zsh	Alt+C	fzf cd directory
-zsh	Ctrl+R	fzf command history
-zsh	Ctrl+T	fzf paste file path
+zsh	C-r	fzf command history
+zsh	C-t	fzf paste file path
 zsh	a	pi
 zsh	d	ssh host list/connect
 zsh	e	nvim

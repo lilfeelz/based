@@ -1,14 +1,15 @@
-vim.g.mapleader = ' '
+vim.g.mapleader = vim.keycode('<C-_>')
+vim.keymap.set({ 'n', 'x' }, '<C-/>', '<C-_>', { remap = true })
 
 vim.pack.add({ 'https://github.com/ibhagwan/fzf-lua' }, { confirm = false })
 local fzf = require('fzf-lua')
 local map = vim.keymap.set
 
-map('n', '<leader>ff', fzf.files, { desc = 'files (f)' })
-map('n', '<leader>fg', fzf.live_grep, { desc = 'search (s)' })
-map('n', '<leader>fw', fzf.grep_cword, { desc = 'search word' })
-map('n', '<leader>fb', fzf.buffers, { desc = 'buffers' })
-map('n', '<leader>fr', fzf.oldfiles, { desc = 'recent files' })
+map('n', '<leader>f', fzf.files, { desc = 'files (f)' })
+map('n', '<leader>s', fzf.live_grep, { desc = 'search (s)' })
+map('n', '<leader>w', fzf.grep_cword, { desc = 'search word' })
+map('n', '<leader>b', fzf.buffers, { desc = 'buffers' })
+map('n', '<leader>o', fzf.oldfiles, { desc = 'oldfiles' })
 
 map('n', '<leader>j', function()
   local out = vim.fn.systemlist({ 'm', 'list' })

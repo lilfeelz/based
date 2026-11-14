@@ -60,8 +60,8 @@ printf "zmx:%s\n" "$*"
 EOF
 mkdir -p "$HOME/Workspaces/ctx/demo"
 eq "$(m list)" "zmx:list --short"
-eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^a"
-eq "$(j demo)" "zmx:attach demo dvtm -m ^a"
+eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^_"
+eq "$(j demo)" "zmx:attach demo dvtm -m ^_"
 eq "$(m detach)" "zmx:detach"
 eq "$(printf 'one\ntwo\n' | m delete)" "$(printf 'zmx:kill one\nzmx:kill two')"
 
@@ -85,7 +85,8 @@ printf "ssh:%s\n" "$*"
 EOF
 eq "$(d list)" "$(printf 'book\npixel')"
 eq "$(printf 'pixel\n' | d)" "ssh:-t -- pixel"
-eq "$(d book m list)" "ssh:-t -- book m list"
+eq "$(printf 'pixel\n' | d -- j)" "ssh:-t -- pixel j"
+eq "$(d book -- m list)" "ssh:-t -- book m list"
 
 # k: list, delete via stdin, edit
 mkdir -p "$BASED_CONFIG"

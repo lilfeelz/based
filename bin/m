@@ -81,7 +81,7 @@ case "$cmd" in
         cd "$dir"
         SHELL="${SHELL:-$(command -v zsh || command -v sh)}"
         export SHELL
-        exec zmx attach "$name" dvtm -m '^a'
+        exec zmx attach "$name" dvtm -m '^_'
         ;;
     esac
     ;;

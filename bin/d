@@ -1,10 +1,11 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -eq 0 ] && [ ! -t 0 ]; then
+if [ ! -t 0 ] && { [ "$#" -eq 0 ] || [ "${1:-}" = "--" ]; }; then
+  if [ "${1:-}" = "--" ]; then shift; fi
   IFS= read -r host || exit 0
   [ -n "$host" ] || exit 0
-  exec ssh -t -- "$host"
+  exec ssh -t -- "$host" "$@"
 fi
 
 case "${1:-list}" in
@@ -21,12 +22,13 @@ case "${1:-list}" in
     } | awk '!seen[$0]++'
     ;;
   -*)
-    printf 'usage: d [list | HOST [CMD...]]\n' >&2
+    printf 'usage: d [list | HOST [-- CMD...]]\n' >&2
     exit 2
     ;;
   *)
     host="$1"
     shift
+    if [ "${1:-}" = "--" ]; then shift; fi
     exec ssh -t -- "$host" "$@"
     ;;
 esac
