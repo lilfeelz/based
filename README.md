@@ -1,6 +1,6 @@
 # based
 
-Composable terminal workspace built around `zsh`, `nvim`, and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines:
+Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines:
 
 - **Android (Termux)** and **Linux / Container**: `zmx` for persistent sessions and `dvtm` for pane tiling.
 - **macOS**: `rex` for sessions and `rift` for window tiling.
@@ -45,11 +45,36 @@ Bindings follow consistent patterns across `zsh`, `nvim`, `pi`, `dvtm`, and `rex
 
 Full reference in [config/keybinds.tsv](config/keybinds.tsv) (or run `k list [tool]`).
 
-## Install
+## Remote sessions
+
+`d` uses SSH for terminal sessions and remote commands. `m` keeps the session alive through disconnection; reconnect with `d <host> m <session>`.
+
+The [zmx SSH workflow](https://zmx.sh/ssh) recommends connection sharing and optional `autossh` reconnects. For a development host in `~/.ssh/config`:
+
+```sshconfig
+Host based
+  HostName <host>
+  ControlMaster auto
+  ControlPath ~/.ssh/cm-%C
+  ControlPersist 10m
+  ServerAliveInterval 15
+  ServerAliveCountMax 3
+```
+
+`ControlPersist` keeps an idle connection available; it does not reconnect a broken one. Unlike zmx's dedicated session aliases, leave `RemoteCommand` unset here so `d based j` and other explicit commands work. `d` already requests a terminal with `ssh -t`.
+
+[Mosh](https://mosh.org/) adds roaming and predictive typing over UDP, but only synchronizes the visible screen, so native terminal scrollback is incomplete. It is optional for unstable mobile links: install it at both ends and use `mosh <host> -- m <session>`. Persistent sessions and connection roaming solve different problems.
+
+## Development
+
+Run `make` for the command list. `make install` selects the macOS or Termux installer; Linux uses the container image. `make config` installs only primitives and configuration.
 
 ```sh
-./install/macos.sh      # macOS: nvim, pi, rift, primitives, and configs
-./install/termux.sh     # Android (Termux): zmx, dvtm, pi, primitives, and configs
-./run                   # Container: pull ghcr.io/lilfeelz/based:latest (or ./run build) and enter zsh
-./test/run              # Run shellcheck, shfmt, and unit tests (--install for full binary install test)
+make test          # lint and unit tests
+make test-install  # also verify pinned binary installation
+make build         # build the image without entering a shell
+make run           # start and enter the development container
+make stop          # remove the development container
 ```
+
+The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write to your home directory; tests use temporary homes.
