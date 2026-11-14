@@ -2,9 +2,9 @@
 set -eu
 
 if [ "$#" -gt 0 ]; then
-  exec m attach "$@"
+  exec m "$@"
 fi
 {
-  m list
+  m
   w
 } | awk '!seen[$0]++' | fzf --prompt 'mux> ' | m attach

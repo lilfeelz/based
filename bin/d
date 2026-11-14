@@ -1,14 +1,15 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -eq 0 ] && [ ! -t 0 ]; then
+if [ "${1:-}" = "--" ]; then
+  shift
   IFS= read -r host || exit 0
   [ -n "$host" ] || exit 0
-  exec ssh -t -- "$host"
+  exec ssh -t -- "$host" "$@"
 fi
 
-case "${1:-list}" in
-  list)
+case "${1:-}" in
+  "")
     {
       if [ -f "${SSH_CONFIG:-$HOME/.ssh/config}" ]; then
         awk 'tolower($1) == "host" {
@@ -21,12 +22,13 @@ case "${1:-list}" in
     } | awk '!seen[$0]++'
     ;;
   -*)
-    printf 'usage: d [list | HOST [CMD...]]\n' >&2
+    printf 'usage: d [HOST [-- CMD...]] (or pipe HOST to d -- [CMD...])\n' >&2
     exit 2
     ;;
   *)
     host="$1"
     shift
+    if [ "${1:-}" = "--" ]; then shift; fi
     exec ssh -t -- "$host" "$@"
     ;;
 esac

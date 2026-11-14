@@ -59,9 +59,12 @@ mock zmx <<'EOF'
 printf "zmx:%s\n" "$*"
 EOF
 mkdir -p "$HOME/Workspaces/ctx/demo"
+eq "$(m </dev/null)" "zmx:list --short"
+eq "$(m demo)" "zmx:attach demo dvtm -m ^_"
 eq "$(m list)" "zmx:list --short"
-eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^a"
-eq "$(j demo)" "zmx:attach demo dvtm -m ^a"
+eq "$(printf '' | m attach)" ""
+eq "$(printf '%s\n' "$tilde/Workspaces/ctx/demo" | m attach)" "zmx:attach demo dvtm -m ^_"
+eq "$(j demo)" "zmx:attach demo dvtm -m ^_"
 eq "$(m detach)" "zmx:detach"
 eq "$(printf 'one\ntwo\n' | m delete)" "$(printf 'zmx:kill one\nzmx:kill two')"
 
@@ -70,7 +73,8 @@ export BASED_MUX=rex
 mock rex <<'EOF'
 if [ "$1" = ls ]; then printf "ID NAME\n1 alpha\n"; else printf "rex:%s\n" "$*"; fi
 EOF
-eq "$(m list)" "alpha"
+eq "$(m </dev/null)" "alpha"
+eq "$(m alpha)" "rex:attach alpha"
 eq "$(m attach alpha)" "rex:attach alpha"
 eq "$(m delete alpha)" "rex:kill alpha"
 
@@ -83,9 +87,14 @@ EOF
 mock ssh <<'EOF'
 printf "ssh:%s\n" "$*"
 EOF
-eq "$(d list)" "$(printf 'book\npixel')"
-eq "$(printf 'pixel\n' | d)" "ssh:-t -- pixel"
-eq "$(d book m list)" "ssh:-t -- book m list"
+eq "$(d </dev/null)" "$(printf 'book\npixel')"
+eq "$(d list)" "ssh:-t -- list"
+eq "$(printf 'pixel\n' | d --)" "ssh:-t -- pixel"
+eq "$(printf 'pixel\n' | d -- j)" "ssh:-t -- pixel j"
+eq "$(d book -- m)" "ssh:-t -- book m"
+eq "$(d book)" "ssh:-t -- book"
+eq "$(printf '' | d --)" ""
+if d -bad >/dev/null 2>&1; then fail "d accepted an option as host"; fi
 
 # k: list, delete via stdin, edit
 mkdir -p "$BASED_CONFIG"
