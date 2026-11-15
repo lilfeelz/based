@@ -8,4 +8,4 @@ command -v brew >/dev/null 2>&1 || {
 
 brew install bat fd fzf jq ripgrep
 
-sh "$(dirname "$0")/common.sh" nvim pi rift config
+sh "$(dirname "$0")/common.sh" zmx dvtm nvim pi config
