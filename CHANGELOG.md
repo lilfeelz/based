@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/lilfeelz/based/compare/v0.1.2...v0.1.3) (2026-11-15)
+
+
+### Bug Fixes
+
+* use plain terminal sessions on every platform ([35e9626](https://github.com/lilfeelz/based/commit/35e962690d28a8b3643c061527d0f0c8ad7d2d55))
+
 ## [0.1.2](https://github.com/lilfeelz/based/compare/v0.1.1...v0.1.2) (2026-11-14)
 
 
