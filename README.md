@@ -69,7 +69,7 @@ Host based
 Try the published image without modifying `$HOME`:
 
 ```sh
-docker run --rm -it ghcr.io/lilfeelz/based:latest zsh -l
+docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
 ```
 
 CI tests and builds once on each PR, saving the image as a seven-day artifact. After merge, main downloads and publishes that image without repeating tests or builds. Publication requires the saved source tree to match main; PR checks must be up to date. Missing or stale artifacts fail publication instead of triggering a rebuild.
@@ -84,4 +84,4 @@ make run           # start and enter the development container
 make stop          # remove the development container
 ```
 
-The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write primitives to `~/.local/bin`, configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up an existing file to `init.lua.based-backup`). Termux and the container also write `~/.zshrc`; on macOS or with `make config`, source `~/.config/based/zshrc` from `~/.zshrc` (or pass `BASED_ZSHRC=~/.zshrc`). Tests use temporary homes.
+The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write primitives to `~/.local/bin` (`$PREFIX/bin` on Termux), configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up an existing file to `init.lua.based-backup`). Termux and the container also write `~/.zshrc`; on macOS or with `make config`, source `~/.config/based/zshrc` from `~/.zshrc` (or pass `BASED_ZSHRC=~/.zshrc`). Tests use temporary homes.
