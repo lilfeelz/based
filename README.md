@@ -5,7 +5,7 @@
 - Uses zsh, Neovim and pi with zmx session persistence and dvtm panes across macOS, Linux containers and Termux.
 
 ## Usage
-Try the published container without installing configuration into your home:
+If CI has published the image, try it without installing configuration into your home (availability unverified):
 
 ```sh
 docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
@@ -21,9 +21,9 @@ make build ENGINE=docker
 make run ENGINE=docker
 ```
 
-- `make install`: native macOS/Termux dependencies and config; Linux uses the container.
+- `make install`: native macOS/Termux dependencies and config; on Linux it exits with an error. Use `make build`/`make run` instead.
 - `make config`: primitives and config only. Both overwrite installed primitives and Neovim config.
-- Default destinations: `~/.local/bin`, `~/.config/based`, `~/.config/nvim/init.lua`; Termux uses `$PREFIX/bin`.
+- Native destinations: `~/.local/bin`, `~/.config/based`, `~/.config/nvim/init.lua`; Termux uses `$PREFIX/bin`, containers `/usr/local/bin` for binaries.
 - Existing Neovim config is copied to `init.lua.based-backup`; repeated installs can replace that backup.
 - macOS/config-only: source `~/.config/based/zshrc` from `~/.zshrc`; Termux/container write `~/.zshrc`.
 - Engine defaults to Apple `container` on macOS, Docker elsewhere; override `ENGINE` and `IMAGE`.
@@ -32,7 +32,7 @@ make run ENGINE=docker
 w | fzf | m attach       # select workspace, attach persistent session
 m | fzf | m attach       # switch session
 d | fzf | d --           # select SSH host
-f | fzf | xargs e        # select file, open editor
+file=$(f | fzf) && e "$file" # select one file, preserve spaces
 k list                  # display keybinding reference
 ```
 
@@ -57,7 +57,7 @@ test/                # temporary-home command/install and multiplexer tests
 ## Operate
 - Owner: lilfeelz. No hosted application; deployment is local install or container image publication.
 - `make stop ENGINE=docker` removes the development container, not native installs.
-- Rollback: restore saved configuration/binaries or run a previously retained image via `IMAGE`; no native uninstaller or automatic rollback.
+- Rollback: restore saved config/binaries; for a retained image, `make stop ENGINE=docker` then `make run ENGINE=docker IMAGE=<image>`. No native uninstaller or automatic rollback.
 - CI: PRs run promotion-guard tests, `make test-install`, then build/save a seven-day image artifact.
 - Main publishes that PR artifact only when source-tree and image identity checks pass; no fallback rebuild.
 - Release-please owns versions and changelog. No image availability or live host deployment is asserted here.
