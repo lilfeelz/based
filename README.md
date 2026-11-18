@@ -1,8 +1,8 @@
 # based
 
-Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines.
+Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Single-letter commands in `bin/` read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines.
 
-Use any terminal. `zmx` keeps sessions alive and `dvtm` tiles panes on every platform.
+`zmx` keeps sessions alive and `dvtm` tiles panes on every platform.
 
 ## Primitives
 
@@ -36,19 +36,15 @@ f | fzf | xargs e                   # find file and open in nvim
 
 ## Keybinds
 
-Bindings follow consistent patterns across `zsh`, `nvim`, `pi`, and `dvtm`:
-
-- **Leader**: `C-/` in `nvim` and `pi`; `C-g` in `dvtm` so pane commands do not consume editor shortcuts.
+- **Leader**: `C-/` in `nvim` and `pi`; `C-g` in `dvtm`.
 - **One-letter actions**: `f` files, `s` search, `b` buffers, `o` oldfiles, `w` word or workspaces, `j` jump session, `d` detach or device, `e` editor, `a` agent.
-- **Pane controls**: in `dvtm`, `C-g j/k` selects next/previous pane, `C-g h/l` resizes the master area, `C-g Space` cycles layouts, and `C-g Enter` zooms a pane to master.
+- **Pane controls** (`dvtm`): `C-g j/k` next/prev pane, `C-g h/l` resize master, `C-g Space` cycle layouts, `C-g Enter` zoom to master.
 
-Full reference in [config/keybinds.tsv](config/keybinds.tsv) (or run `k list [tool]`).
+Full reference in [config/keybinds.tsv](config/keybinds.tsv) (`k list [tool]`).
 
 ## Remote sessions
 
-`d` uses SSH for terminal sessions and remote commands. `m` keeps the session alive through disconnection; reconnect with `d <host> m <session>`.
-
-The [zmx SSH workflow](https://zmx.sh/ssh) recommends connection sharing and optional `autossh` reconnects. For a development host in `~/.ssh/config`:
+`d` runs SSH sessions (`ssh -t`) and remote commands; `m` keeps sessions alive (`d <host> m <session>`). In `~/.ssh/config`, leave `RemoteCommand` unset so `d based j` works:
 
 ```sshconfig
 Host based
@@ -60,28 +56,19 @@ Host based
   ServerAliveCountMax 3
 ```
 
-`ControlPersist` keeps an idle connection available; it does not reconnect a broken one. Unlike zmx's dedicated session aliases, leave `RemoteCommand` unset here so `d based j` and other explicit commands work. `d` already requests a terminal with `ssh -t`.
-
-[Mosh](https://mosh.org/) adds roaming and predictive typing over UDP, but only synchronizes the visible screen, so native terminal scrollback is incomplete. It is optional for unstable mobile links: install it at both ends and use `mosh <host> -- m <session>`. Persistent sessions and connection roaming solve different problems.
+For unstable mobile links with `mosh` installed on both ends: `mosh <host> -- m <session>`.
 
 ## Development
 
-Try the published image without modifying `$HOME`:
-
 ```sh
 docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
-```
-
-CI tests and builds once on each PR, saving the image as a seven-day artifact. After merge, main downloads and publishes that image without repeating tests or builds. Publication requires the saved source tree to match main; PR checks must be up to date. Missing or stale artifacts fail publication instead of triggering a rebuild.
-
-Run `make` for the command list. `make install` selects the macOS or Termux installer; Linux uses the container image. `make config` installs only primitives and configuration.
-
-```sh
 make test          # lint and unit tests
 make test-install  # also verify pinned binary installation
-make build         # build the image without entering a shell
-make run           # start and enter the development container
-make stop          # remove the development container
+make build         # build image without entering a shell
+make run           # start and enter development container
+make stop          # remove development container
 ```
 
-The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write primitives to `~/.local/bin` (`$PREFIX/bin` on Termux), configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up an existing file to `init.lua.based-backup`). Termux and the container also write `~/.zshrc`; on macOS or with `make config`, source `~/.config/based/zshrc` from `~/.zshrc` (or pass `BASED_ZSHRC=~/.zshrc`). Tests use temporary homes.
+- `make install` picks macOS or Termux (`make build`/`run` on Linux); `make config` installs primitives and config only.
+- `ENGINE=docker` overrides the Apple `container` default on macOS; `IMAGE=<image>` overrides the image.
+- Installs write primitives to `~/.local/bin` (`$PREFIX/bin` on Termux), configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up to `init.lua.based-backup`). Source `~/.config/based/zshrc` from `~/.zshrc` on macOS or pass `BASED_ZSHRC=~/.zshrc`. Tests use temporary homes.
