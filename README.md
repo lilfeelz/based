@@ -1,87 +1,78 @@
 # based
 
-Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines.
+## Purpose
+- Demonstrates a composable terminal workspace: small shell commands, plain-text pipes and persistent sessions.
+- Uses zsh, Neovim and pi with zmx session persistence and dvtm panes across macOS, Linux containers and Termux.
 
-Use any terminal. `zmx` keeps sessions alive and `dvtm` tiles panes on every platform.
-
-## Primitives
-
-| Command | Action |
-|---|---|
-| `a` | `pi` coding agent (`a [args...]`) |
-| `d` | SSH devices (`d [<host> [<cmd>...]]`; no arguments lists, `d -- [<cmd>...]` reads host from stdin) |
-| `e` | `nvim` editor (`e [files...]`) |
-| `f` | find files (`fd --hidden --follow --exclude .git`) |
-| `g` | `git` (`g [args...]`) |
-| `h` | manual pages (`man [args...]`) |
-| `j` | fuzzy jump to session or workspace (`j [target]`) |
-| `k` | keybind legend and config (`k [list [tool] \| edit [tool] \| delete [tool key]]`; `k delete` reads stdin) |
-| `l` | list directory (`ls -lahF`) |
-| `m` | session multiplexer (`m [list \| [attach] [target] \| detach \| delete [target...]]`; `m attach` and `m delete` read targets from stdin) |
-| `s` | search file contents (`rg --hidden --smart-case --glob !.git`) |
-| `w` | list workspace paths (`~`, `~/Notes[/<dir>[/<subdir>]]`, `~/Workspaces[/<ctx>[/<proj>]]`) |
-
-## Composition
-
-```sh
-w | fzf | m attach                  # pick workspace and attach session
-m | fzf | m attach                  # switch active session
-m | fzf -m | m delete               # delete selected sessions
-d | fzf | d --                      # pick SSH host and connect
-d <host> j                          # pick remote session or workspace
-d <host> m <session>                # attach remote session directly
-k | fzf | k delete                  # delete keybind entry from legend
-f | fzf | xargs e                   # find file and open in nvim
-```
-
-## Keybinds
-
-Bindings follow consistent patterns across `zsh`, `nvim`, `pi`, and `dvtm`:
-
-- **Leader**: `C-/` in `nvim` and `pi`; `C-g` in `dvtm` so pane commands do not consume editor shortcuts.
-- **One-letter actions**: `f` files, `s` search, `b` buffers, `o` oldfiles, `w` word or workspaces, `j` jump session, `d` detach or device, `e` editor, `a` agent.
-- **Pane controls**: in `dvtm`, `C-g j/k` selects next/previous pane, `C-g h/l` resizes the master area, `C-g Space` cycles layouts, and `C-g Enter` zooms a pane to master.
-
-Full reference in [config/keybinds.tsv](config/keybinds.tsv) (or run `k list [tool]`).
-
-## Remote sessions
-
-`d` uses SSH for terminal sessions and remote commands. `m` keeps the session alive through disconnection; reconnect with `d <host> m <session>`.
-
-The [zmx SSH workflow](https://zmx.sh/ssh) recommends connection sharing and optional `autossh` reconnects. For a development host in `~/.ssh/config`:
-
-```sshconfig
-Host based
-  HostName <host>
-  ControlMaster auto
-  ControlPath ~/.ssh/cm-%C
-  ControlPersist 10m
-  ServerAliveInterval 15
-  ServerAliveCountMax 3
-```
-
-`ControlPersist` keeps an idle connection available; it does not reconnect a broken one. Unlike zmx's dedicated session aliases, leave `RemoteCommand` unset here so `d based j` and other explicit commands work. `d` already requests a terminal with `ssh -t`.
-
-[Mosh](https://mosh.org/) adds roaming and predictive typing over UDP, but only synchronizes the visible screen, so native terminal scrollback is incomplete. It is optional for unstable mobile links: install it at both ends and use `mosh <host> -- m <session>`. Persistent sessions and connection roaming solve different problems.
-
-## Development
-
-Try the published image without modifying `$HOME`:
+## Usage
+If CI has published the image, try it without installing configuration into your home (availability unverified):
 
 ```sh
 docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
 ```
 
-CI tests and builds once on each PR, saving the image as a seven-day artifact. After merge, main downloads and publishes that image without repeating tests or builds. Publication requires the saved source tree to match main; PR checks must be up to date. Missing or stale artifacts fail publication instead of triggering a rebuild.
-
-Run `make` for the command list. `make install` selects the macOS or Termux installer; Linux uses the container image. `make config` installs only primitives and configuration.
+Build from source instead:
 
 ```sh
-make test          # lint and unit tests
-make test-install  # also verify pinned binary installation
-make build         # build the image without entering a shell
-make run           # start and enter the development container
-make stop          # remove the development container
+git clone https://github.com/lilfeelz/based.git
+cd based
+make test
+make build ENGINE=docker
+make run ENGINE=docker
 ```
 
-The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write primitives to `~/.local/bin` (`$PREFIX/bin` on Termux), configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up an existing file to `init.lua.based-backup`). Termux and the container also write `~/.zshrc`; on macOS or with `make config`, source `~/.config/based/zshrc` from `~/.zshrc` (or pass `BASED_ZSHRC=~/.zshrc`). Tests use temporary homes.
+- `make install`: native macOS/Termux dependencies and config; on Linux it exits with an error. Use `make build`/`make run` instead.
+- `make config`: primitives and config only. Both overwrite installed primitives and Neovim config.
+- Native destinations: `~/.local/bin`, `~/.config/based`, `~/.config/nvim/init.lua`; Termux uses `$PREFIX/bin`, containers `/usr/local/bin` for binaries.
+- Existing Neovim config is copied to `init.lua.based-backup`; repeated installs can replace that backup.
+- macOS/config-only: source `~/.config/based/zshrc` from `~/.zshrc`; Termux/container write `~/.zshrc`.
+- Engine defaults to Apple `container` on macOS, Docker elsewhere; override `ENGINE` and `IMAGE`.
+
+```sh
+w | fzf | m attach       # select workspace, attach persistent session
+m | fzf | m attach       # switch session
+d | fzf | d --           # select SSH host
+file=$(f | fzf) && e "$file" # select one file, preserve spaces
+k list                  # display keybinding reference
+```
+
+- Primitives: `a` pi, `d` SSH, `e` nvim, `f` fd, `g` git, `h` man, `j` jump, `k` keys, `l` ls, `m` sessions, `s` rg, `w` workspaces.
+- `w` discovers home, notes and workspace directories; `d` reads SSH config and optionally Tailscale.
+- `d <host> j` selects a remote workspace; `d <host> m <session>` reconnects to a persistent session.
+- Keys: `C-/` leader in Neovim/pi; dvtm `C-g j/k` select panes, `h/l` resize, Space layout, Enter zoom.
+- Full bindings: [config/keybinds.tsv](config/keybinds.tsv).
+
+## Layout
+```text
+bin/                 # single-letter commands composed through stdin/stdout
+config/              # zsh, Neovim and keybinding reference
+install/             # platform installers and checksummed tool pins
+run                  # container build/start/stop entrypoint
+Makefile             # install, config, test and container commands
+test/                # temporary-home command/install and multiplexer tests
+.devcontainer/       # Linux image and development environment
+.github/             # CI, image-promotion guards and release workflow
+```
+
+## Operate
+- Owner: lilfeelz. No hosted application; deployment is local install or container image publication.
+- `make stop ENGINE=docker` removes the development container, not native installs.
+- Rollback: restore saved config/binaries; for a retained image, `make stop ENGINE=docker` then `make run ENGINE=docker IMAGE=<image>`. No native uninstaller or automatic rollback.
+- CI: PRs run promotion-guard tests, `make test-install`, then build/save a seven-day image artifact.
+- Main publishes that PR artifact only when source-tree and image identity checks pass; no fallback rebuild.
+- Release-please owns versions and changelog. No image availability or live host deployment is asserted here.
+
+```sh
+make test
+make test-install
+node --test .github/scripts/image.test.cjs
+```
+
+## Dependencies
+- Runtime: zsh, Neovim, pi, zmx, dvtm, fzf, fd, ripgrep, git and SSH; optional Tailscale discovery.
+- Installation: platform package manager plus curl, jq, tar, checksum tools and C/ncurses build tooling; pins in `install/pins.json`.
+- Containers: Docker or Apple `container`; pi requires separately configured model access.
+- Tests: Python 3, Node.js and jq; shellcheck/shfmt run when available.
+
+## Status
+- Live: source-tested workspace primitives and image-promotion CI; published image availability unverified. Planned: retain as a terminal-composition showcase.
