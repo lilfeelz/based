@@ -1,6 +1,6 @@
 # based
 
-Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines:
+Composable terminal workspace for macOS, Linux and Termux, built around `zsh`, `nvim` and `pi`. Everything is driven by single-letter commands in `bin/` that read and write plain text lines so they compose with `fzf` and Unix pipes across local and remote machines.
 
 Use any terminal. `zmx` keeps sessions alive and `dvtm` tiles panes on every platform.
 
@@ -15,11 +15,11 @@ Use any terminal. `zmx` keeps sessions alive and `dvtm` tiles panes on every pla
 | `g` | `git` (`g [args...]`) |
 | `h` | manual pages (`man [args...]`) |
 | `j` | fuzzy jump to session or workspace (`j [target]`) |
-| `k` | keybind legend and config (`k [list [tool] \| edit [tool] \| delete [tool key]]`; reads stdin) |
+| `k` | keybind legend and config (`k [list [tool] \| edit [tool] \| delete [tool key]]`; `k delete` reads stdin) |
 | `l` | list directory (`ls -lahF`) |
-| `m` | session multiplexer (`m [target \| detach \| delete [target...]]`; no arguments lists, `m attach` reads target from stdin) |
+| `m` | session multiplexer (`m [list \| [attach] [target] \| detach \| delete [target...]]`; `m attach` and `m delete` read targets from stdin) |
 | `s` | search file contents (`rg --hidden --smart-case --glob !.git`) |
-| `w` | list workspace paths (`~`, `~/Notes`, `~/Workspaces/<ctx>[/<proj>]`) |
+| `w` | list workspace paths (`~`, `~/Notes[/<dir>[/<subdir>]]`, `~/Workspaces[/<ctx>[/<proj>]]`) |
 
 ## Composition
 
@@ -66,6 +66,12 @@ Host based
 
 ## Development
 
+Try the published image without modifying `$HOME`:
+
+```sh
+docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
+```
+
 CI tests and builds once on each PR, saving the image as a seven-day artifact. After merge, main downloads and publishes that image without repeating tests or builds. Publication requires the saved source tree to match main; PR checks must be up to date. Missing or stale artifacts fail publication instead of triggering a rebuild.
 
 Run `make` for the command list. `make install` selects the macOS or Termux installer; Linux uses the container image. `make config` installs only primitives and configuration.
@@ -78,4 +84,4 @@ make run           # start and enter the development container
 make stop          # remove the development container
 ```
 
-The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write to your home directory; tests use temporary homes.
+The engine defaults to Apple `container` on macOS and Docker elsewhere. Override with `ENGINE=docker`; `IMAGE=<image>` selects the image for both build and run. Native installs and `make config` write primitives to `~/.local/bin` (`$PREFIX/bin` on Termux), configs to `~/.config/based`, and `~/.config/nvim/init.lua` (backing up an existing file to `init.lua.based-backup`). Termux and the container also write `~/.zshrc`; on macOS or with `make config`, source `~/.config/based/zshrc` from `~/.zshrc` (or pass `BASED_ZSHRC=~/.zshrc`). Tests use temporary homes.
