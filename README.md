@@ -5,7 +5,7 @@ persistent sessions. zsh, Neovim and pi on macOS, Linux containers and Termux.
 
 ```text
   w ──▶ fzf ──▶ m attach ──▶ dvtm panes ──▶ zsh / nvim / pi
-  d ──▶ fzf ──▶ ssh host ──▶ zmx session (persists across disconnects)
+  d ──▶ fzf ──▶ ssh host ──▶ zmx session (started by the remote login shell)
 ```
 
 ## Quickstart
@@ -48,6 +48,9 @@ w | fzf | m attach           # pick a workspace, attach its session
 d | fzf | d --               # pick a host
 file=$(f | fzf) && e "$file" # pick one file, keep spaces
 ```
+
+`d` only opens the SSH connection. A remote session persists across disconnects when the
+remote login shell starts `zmx`; the workspace has to be installed on that host too.
 
 Full bindings: [config/keybinds.tsv](config/keybinds.tsv).
 
