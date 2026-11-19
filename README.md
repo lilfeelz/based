@@ -24,12 +24,14 @@ Without installing anything into your home directory:
 docker run --rm -it --user vscode ghcr.io/lilfeelz/based:latest zsh -l
 ```
 
+The container run is disposable: anything written inside it is lost when it exits.
+
 ## Primitives
 
 | Command | Does |
 |---|---|
 | `a` | pi |
-| `d` | ssh, optionally from the Tailscale host list |
+| `d` | ssh, optionally from the Tailscale host list; remote sessions need the workspace installed there |
 | `e` | nvim |
 | `f` | fd |
 | `g` | git |
@@ -52,7 +54,7 @@ Full bindings: [config/keybinds.tsv](config/keybinds.tsv).
 ## Install
 
 - `make install`: native macOS and Termux dependencies plus config. On Linux it exits with an error; use `make build`/`make run`.
-- `make config`: primitives and config only. Overwrites installed primitives and the Neovim config; the existing `init.lua` is backed up to `init.lua.based-backup`.
+- `make config`: primitives and config only. Overwrites installed primitives and the Neovim config; the existing `init.lua` is backed up to `init.lua.based-backup`, and a second run replaces that backup.
 - Destinations: `~/.local/bin`, `~/.config/based`, `~/.config/nvim/init.lua`; Termux uses `$PREFIX/bin`, containers `/usr/local/bin`.
 - Source `~/.config/based/zshrc` from `~/.zshrc` on macOS; Termux and containers write `~/.zshrc`.
 - `ENGINE` defaults to Apple `container` on macOS and Docker elsewhere.
